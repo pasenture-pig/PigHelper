@@ -1,0 +1,210 @@
+{% extends "chart_base.html" %}
+
+{% block title %}3D饼图生成器 - 猪咪小帮手{% endblock %}
+
+{% block chart_title %}🥧 3D饼图生成器{% endblock %}
+
+{% block chart_subtitle %}让饼图立起来，展示更生动的比例关系{% endblock %}
+
+{% block basic_settings %}
+<div class="form-group">
+    <label for="chartTitle">图表标题</label>
+    <input type="text" id="chartTitle" value="3D饼图示例" placeholder="输入图表标题">
+</div>
+
+<div class="form-group">
+    <label for="chartData">数据（用逗号分隔）</label>
+    <input type="text" id="chartData" value="30,25,20,15,10" placeholder="例如: 30,25,20,15,10">
+    <div class="help-text">输入数字，用英文逗号分隔</div>
+</div>
+
+<div class="form-group">
+    <label for="pieLabels">扇形标签 <span class="optional">(选填，用逗号分隔)</span></label>
+    <input type="text" id="pieLabels" placeholder="例如: 产品A,产品B,产品C,产品D,产品E" value="产品A,产品B,产品C,产品D,产品E">
+    <div class="help-text">自定义每个扇形的名称，数量应与数据数量一致</div>
+</div>
+{% endblock %}
+
+{% block advanced_settings %}
+<div class="row-3">
+    <div class="form-group">
+        <label>主色调</label>
+        <div class="color-picker-group">
+            <input type="color" id="pieColor1" value="#FF6B6B">
+            <span class="color-label">色1</span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>辅助色</label>
+        <div class="color-picker-group">
+            <input type="color" id="pieColor2" value="#4ECDC4">
+            <span class="color-label">色2</span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>背景颜色</label>
+        <div class="color-picker-group">
+            <input type="color" id="bgColor" value="#ffffff">
+            <span class="color-label">背景色</span>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <label for="pieHeight">饼图厚度 <span class="optional">(0.1-1.0)</span></label>
+        <input type="number" id="pieHeight" value="0.3" min="0.1" max="1.0" step="0.05">
+        <div class="help-text">数值越大饼图越厚</div>
+    </div>
+    <div class="form-group">
+        <label for="fontSize">字体大小 <span class="optional">(8-20)</span></label>
+        <input type="number" id="fontSize" value="12" min="8" max="20" step="1">
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <label for="titleFontSize">标题字体大小 <span class="optional">(10-30)</span></label>
+        <input type="number" id="titleFontSize" value="16" min="10" max="30" step="1">
+    </div>
+    <div class="form-group">
+        <label>图片尺寸 <span class="optional">(英寸)</span></label>
+        <div class="row" style="gap: 10px;">
+            <input type="number" id="figWidth" value="10" min="4" max="20" step="0.5" placeholder="宽">
+            <input type="number" id="figHeight" value="8" min="4" max="20" step="0.5" placeholder="高">
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <label>视角</label>
+        <div class="row" style="gap: 10px;">
+            <input type="number" id="elev" value="30" min="0" max="90" step="5" placeholder="仰角">
+            <input type="number" id="azim" value="45" min="0" max="360" step="5" placeholder="方位角">
+        </div>
+        <div class="help-text">仰角(0-90°) 方位角(0-360°)</div>
+    </div>
+    <div class="form-group">
+        <div class="checkbox-group" style="margin-top: 25px;">
+            <input type="checkbox" id="showPercentage" checked>
+            <label for="showPercentage">显示百分比</label>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <div class="checkbox-group">
+            <input type="checkbox" id="showValues" checked>
+            <label for="showValues">显示数值</label>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block generate_button_text %}🥧 生成3D饼图{% endblock %}
+
+{% block loading_text %}正在生成3D饼图...{% endblock %}
+
+{% block hint_text %}💡 提示：3D饼图让比例关系更立体直观{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+    const chartTitle = document.getElementById('chartTitle');
+    const chartData = document.getElementById('chartData');
+    const pieLabels = document.getElementById('pieLabels');
+    const pieColor1 = document.getElementById('pieColor1');
+    const pieColor2 = document.getElementById('pieColor2');
+    const bgColor = document.getElementById('bgColor');
+    const fontSize = document.getElementById('fontSize');
+    const titleFontSize = document.getElementById('titleFontSize');
+    const figWidth = document.getElementById('figWidth');
+    const figHeight = document.getElementById('figHeight');
+    const showPercentage = document.getElementById('showPercentage');
+    const showValues = document.getElementById('showValues');
+    const pieHeight = document.getElementById('pieHeight');
+    const elev = document.getElementById('elev');
+    const azim = document.getElementById('azim');
+
+    function generateGradientColors(color1, color2, count) {
+        const colors = [];
+        const c1 = hexToRgb(color1);
+        const c2 = hexToRgb(color2);
+        for (let i = 0; i < count; i++) {
+            const ratio = count > 1 ? i / (count - 1) : 0;
+            const r = Math.round(c1.r + (c2.r - c1.r) * ratio);
+            const g = Math.round(c1.g + (c2.g - c1.g) * ratio);
+            const b = Math.round(c1.b + (c2.b - c1.b) * ratio);
+            colors.push(rgbToHex(r, g, b));
+        }
+        return colors;
+    }
+
+    function hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : { r: 0, g: 0, b: 0 };
+    }
+
+    function rgbToHex(r, g, b) {
+        return '#' + [r, g, b].map(x => {
+            const hex = x.toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        }).join('');
+    }
+
+    function buildConfig() {
+        const dataStr = chartData.value.trim();
+        const data = parseData(dataStr);
+
+        if (data.length === 0) {
+            showError('请输入有效的数字数据，用逗号分隔');
+            return null;
+        }
+
+        let labels = null;
+        if (pieLabels.value.trim()) {
+            labels = parseStringList(pieLabels.value);
+            if (labels.length !== data.length) {
+                showError(`标签数量(${labels.length})与数据数量(${data.length})不一致`);
+                return null;
+            }
+        }
+
+        const c1 = pieColor1.value;
+        const c2 = pieColor2.value;
+        const colors = data.length > 2 ? generateGradientColors(c1, c2, data.length) : [c1, c2];
+
+        return {
+            type: 'pie_3d',
+            title: chartTitle.value.trim() || '3D饼图',
+            data: data,
+            labels: labels,
+            colors: colors,
+            background_color: bgColor.value,
+            font_size: parseInt(fontSize.value) || 12,
+            title_font_size: parseInt(titleFontSize.value) || 16,
+            fig_width: parseFloat(figWidth.value) || 10,
+            fig_height: parseFloat(figHeight.value) || 8,
+            show_percentage: showPercentage.checked,
+            show_values: showValues.checked,
+            pie_height: parseFloat(pieHeight.value) || 0.3,
+            elev: parseInt(elev.value) || 30,
+            azim: parseInt(azim.value) || 45
+        };
+    }
+
+    chartData.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            generateBtn.click();
+        }
+    });
+
+    console.log('🥧 3D饼图生成器已加载');
+</script>
+{% endblock %}

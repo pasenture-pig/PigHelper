@@ -208,10 +208,22 @@
     const fitDegree = document.getElementById('fitDegree');
     const showFit = document.getElementById('showFit');
     const showConfidence = document.getElementById('showConfidence');
-    const xMin = document.getElementById('xMin');
-    const xMax = document.getElementById('xMax');
-    const yMin = document.getElementById('yMin');
-    const yMax = document.getElementById('yMax');
+
+    // ✅ 安全获取元素值的辅助函数
+    function getVal(id) {
+        const el = document.getElementById(id);
+        return el ? el.value : '';
+    }
+    
+    function getNum(id) {
+        const el = document.getElementById(id);
+        return el && el.value !== '' ? parseFloat(el.value) : null;
+    }
+    
+    function getChecked(id) {
+        const el = document.getElementById(id);
+        return el ? el.checked : false;
+    }
 
     // 拟合类型切换
     fitType.addEventListener('change', function() {
@@ -227,10 +239,10 @@
         document.getElementById('degreeGroup').style.display = 'none';
     }
 
-    // 构建配置
+    // ✅ 使用安全函数重写 buildConfig
     function buildConfig() {
-        const xDataStr = xData.value.trim();
-        const yDataStr = yData.value.trim();
+        const xDataStr = getVal('xData').trim();
+        const yDataStr = getVal('yData').trim();
 
         const xDataList = parseData(xDataStr);
         const yDataList = parseData(yDataStr);
@@ -247,30 +259,31 @@
 
         return {
             type: 'scatter',
-            title: chartTitle.value.trim() || '散点图',
+            title: getVal('chartTitle').trim() || '散点图',
             x_data: xDataList,
             y_data: yDataList,
-            x_label: xLabel.value.trim() || null,
-            y_label: yLabel.value.trim() || null,
-            color: pointColor.value,
-            trend_color: trendColor.value,
-            size: parseInt(pointSize.value) || 80,
-            alpha: parseFloat(alpha.value) || 0.7,
-            font_size: parseInt(fontSize.value) || 12,
-            title_font_size: parseInt(titleFontSize.value) || 16,
-            fig_width: parseFloat(figWidth.value) || 10,
-            fig_height: parseFloat(figHeight.value) || 8,
-            background_color: bgColor.value,
-            show_grid: showGrid.checked,
-            show_values: showValues.checked,
-            fit_type: fitType.value,
-            fit_degree: parseInt(fitDegree.value) || 2,
-            show_fit: showFit.checked,
-            show_confidence_band: showConfidence.checked,
-            x_min: xMin.value ? parseFloat(xMin.value) : null,
-            x_max: xMax.value ? parseFloat(xMax.value) : null,
-            y_min: yMin.value ? parseFloat(yMin.value) : null,
-            y_max: yMax.value ? parseFloat(yMax.value) : null
+            x_label: getVal('xLabel').trim() || null,
+            y_label: getVal('yLabel').trim() || null,
+            color: getVal('pointColor') || '#667eea',
+            trend_color: getVal('trendColor') || '#FF6B6B',
+            size: parseInt(getVal('pointSize')) || 80,
+            alpha: parseFloat(getVal('alpha')) || 0.7,
+            font_size: parseInt(getVal('fontSize')) || 12,
+            title_font_size: parseInt(getVal('titleFontSize')) || 16,
+            fig_width: parseFloat(getVal('figWidth')) || 10,
+            fig_height: parseFloat(getVal('figHeight')) || 8,
+            background_color: getVal('bgColor') || '#ffffff',
+            show_grid: getChecked('showGrid'),
+            show_values: getChecked('showValues'),
+            fit_type: getVal('fitType') || 'linear',
+            fit_degree: parseInt(getVal('fitDegree')) || 2,
+            show_fit: getChecked('showFit'),
+            show_confidence_band: getChecked('showConfidence'),
+            // ✅ 安全获取轴范围
+            x_min: getNum('xMin'),
+            x_max: getNum('xMax'),
+            y_min: getNum('yMin'),
+            y_max: getNum('yMax')
         };
     }
 
@@ -324,19 +337,13 @@
     }
 
     // ✅ 重写 generateBtn 的点击事件
-    // 在 DOM 加载完成后执行
     document.addEventListener('DOMContentLoaded', function() {
-        // 创建拟合参数显示区域
         createFitInfoContainer();
         
-        // 获取原有的 generateBtn（来自 chart_base）
         const originalBtn = document.getElementById('generateBtn');
-        
-        // 移除原有监听器（通过克隆替换）
         const newBtn = originalBtn.cloneNode(true);
         originalBtn.parentNode.replaceChild(newBtn, originalBtn);
         
-        // 重新绑定事件
         newBtn.addEventListener('click', async function() {
             if (isGenerating) return;
             
@@ -355,7 +362,6 @@
             hintText.classList.add('active');
             hideMessages();
             
-            // 隐藏之前的拟合信息
             const container = document.getElementById('fitInfoContainer');
             if (container) container.style.display = 'none';
             
@@ -380,12 +386,11 @@
                     hintText.classList.remove('active');
                     showSuccess('✅ 图表生成成功！');
                     
-                    // ✅ 显示拟合参数
                     if (result.fit_info) {
                         displayFitInfo(result.fit_info);
                     } else {
-                        const container = document.getElementById('fitInfoContainer');
-                        if (container) container.style.display = 'none';
+                        const c = document.getElementById('fitInfoContainer');
+                        if (c) c.style.display = 'none';
                     }
                 } else {
                     showError('生成失败: ' + result.error);
@@ -401,7 +406,6 @@
             }
         });
         
-        // 更新全局引用
         window.generateBtn = newBtn;
     });
 

@@ -5,6 +5,17 @@ from .pie_chart import PieChartGenerator
 from .line_chart import LineChartGenerator
 from .scatter_chart import ScatterChartGenerator
 
+# 3D图表
+from .bar_3d_chart import Bar3DChartGenerator
+from .pie_3d_chart import Pie3DChartGenerator
+from .line_3d_chart import Line3DChartGenerator
+
+# 热力图
+from .heatmap_chart import HeatmapChartGenerator
+
+# 曲面热力图
+from .surface_chart import SurfaceChartGenerator
+
 
 class ChartFactory:
     """图表工厂类"""
@@ -14,23 +25,18 @@ class ChartFactory:
         'pie': PieChartGenerator,
         'line': LineChartGenerator,
         'scatter': ScatterChartGenerator,
+        # 3D图表
+        'bar_3d': Bar3DChartGenerator,
+        'pie_3d': Pie3DChartGenerator,
+        'line_3d': Line3DChartGenerator,
+        # 热力图
+        'heatmap': HeatmapChartGenerator,
+        # 曲面热力图
+        'surface': SurfaceChartGenerator,
     }
     
     @classmethod
     def create(cls, chart_type, config):
-        """
-        创建图表生成器实例
-        
-        参数:
-            chart_type: 图表类型 (bar, pie, line, scatter)
-            config: 图表配置字典
-        
-        返回:
-            图表生成器实例
-        
-        异常:
-            ValueError: 不支持的图表类型
-        """
         generator_class = cls._generators.get(chart_type)
         if not generator_class:
             raise ValueError(f'不支持的图表类型: {chart_type}')
@@ -38,14 +44,10 @@ class ChartFactory:
     
     @classmethod
     def get_types(cls):
-        """获取所有支持的图表类型"""
         return list(cls._generators.keys())
 
-# 保持向后兼容的函数（可选）
+
 def generate_chart(config):
-    """
-    生成图表（兼容旧版本调用方式）
-    """
     chart_type = config.get('type', 'bar')
     generator = ChartFactory.create(chart_type, config)
     return generator.generate()
@@ -57,6 +59,11 @@ __all__ = [
     'PieChartGenerator',
     'LineChartGenerator',
     'ScatterChartGenerator',
+    'Bar3DChartGenerator',
+    'Pie3DChartGenerator',
+    'Line3DChartGenerator',
+    'HeatmapChartGenerator',
+    'SurfaceChartGenerator',
     'ChartFactory',
     'generate_chart',
 ]

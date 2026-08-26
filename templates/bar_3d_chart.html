@@ -1,0 +1,262 @@
+{% extends "chart_base.html" %}
+
+{% block title %}3D柱状图生成器 - 猪咪小帮手{% endblock %}
+
+{% block chart_title %}📊 3D柱状图生成器{% endblock %}
+
+{% block chart_subtitle %}在三维空间中展示多维度数据对比{% endblock %}
+
+{% block basic_settings %}
+<div class="form-group">
+    <label for="chartTitle">图表标题</label>
+    <input type="text" id="chartTitle" value="3D柱状图示例" placeholder="输入图表标题">
+</div>
+
+<div class="form-group">
+    <label for="xLabels">X轴标签 <span class="optional">(选填，用逗号分隔)</span></label>
+    <input type="text" id="xLabels" placeholder="例如: 类别A,类别B,类别C" value="类别A,类别B,类别C">
+    <div class="help-text">对应每列数据，数量应与列数一致</div>
+</div>
+
+<div class="form-group">
+    <label for="yLabels">Y轴标签 <span class="optional">(选填，用逗号分隔)</span></label>
+    <input type="text" id="yLabels" placeholder="例如: 系列1,系列2,系列3" value="系列1,系列2,系列3">
+    <div class="help-text">对应每行数据，数量应与行数一致</div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <label for="xLabel">X轴名称 <span class="optional">(选填)</span></label>
+        <input type="text" id="xLabel" placeholder="例如: 类别" value="类别">
+    </div>
+    <div class="form-group">
+        <label for="yLabel">Y轴名称 <span class="optional">(选填)</span></label>
+        <input type="text" id="yLabel" placeholder="例如: 系列" value="系列">
+    </div>
+</div>
+
+<div class="form-group">
+    <label for="zLabel">Z轴名称 <span class="optional">(选填)</span></label>
+    <input type="text" id="zLabel" placeholder="例如: 数值" value="数值">
+</div>
+
+<!-- 数据矩阵管理 -->
+<div class="form-section" style="margin-top: 15px; background: #f0f4ff; border-radius: 12px; padding: 15px; border: 1px solid #c7d2fe;">
+    <div class="form-section-title" style="margin-bottom: 10px; font-size: 14px;">
+        📊 数据矩阵
+        <span class="badge" style="font-size: 11px;">必填</span>
+    </div>
+    
+    <div class="row" style="margin-bottom: 10px;">
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="rowCount">行数 (Y轴系列数)</label>
+            <input type="number" id="rowCount" value="3" min="1" max="10" step="1">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="colCount">列数 (X轴类别数)</label>
+            <input type="number" id="colCount" value="3" min="1" max="10" step="1">
+        </div>
+    </div>
+    <button class="btn btn-primary" id="updateMatrixBtn" style="padding: 8px 20px; font-size: 14px; flex: 0 1 auto; min-width: auto;">更新数据输入</button>
+    <div class="help-text" style="margin-top: 8px;">💡 修改行数或列数后点击"更新数据输入"</div>
+</div>
+
+<div id="matrixInputContainer">
+    <!-- 由 JavaScript 动态生成 -->
+</div>
+{% endblock %}
+
+{% block advanced_settings %}
+<div class="row-3">
+    <div class="form-group">
+        <label>柱状图颜色</label>
+        <div class="color-picker-group">
+            <input type="color" id="barColor" value="#667eea">
+            <span class="color-label">主色</span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>边框颜色</label>
+        <div class="color-picker-group">
+            <input type="color" id="edgeColor" value="#5a6fd6">
+            <span class="color-label">边框色</span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>背景颜色</label>
+        <div class="color-picker-group">
+            <input type="color" id="bgColor" value="#ffffff">
+            <span class="color-label">背景色</span>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <label for="fontSize">字体大小 <span class="optional">(8-20)</span></label>
+        <input type="number" id="fontSize" value="11" min="8" max="20" step="1">
+    </div>
+    <div class="form-group">
+        <label for="titleFontSize">标题字体大小 <span class="optional">(10-30)</span></label>
+        <input type="number" id="titleFontSize" value="16" min="10" max="30" step="1">
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <label>图片尺寸 <span class="optional">(英寸)</span></label>
+        <div class="row" style="gap: 10px;">
+            <input type="number" id="figWidth" value="10" min="4" max="20" step="0.5" placeholder="宽">
+            <input type="number" id="figHeight" value="8" min="4" max="20" step="0.5" placeholder="高">
+        </div>
+    </div>
+    <div class="form-group">
+        <label>视角</label>
+        <div class="row" style="gap: 10px;">
+            <input type="number" id="elev" value="25" min="0" max="90" step="5" placeholder="仰角">
+            <input type="number" id="azim" value="45" min="0" max="360" step="5" placeholder="方位角">
+        </div>
+        <div class="help-text">仰角(0-90°) 方位角(0-360°)</div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <div class="checkbox-group">
+            <input type="checkbox" id="showValues" checked>
+            <label for="showValues">显示数值标签</label>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block generate_button_text %}📊 生成3D柱状图{% endblock %}
+
+{% block loading_text %}正在生成3D柱状图...{% endblock %}
+
+{% block hint_text %}💡 提示：3D柱状图适合展示多维度数据的对比关系{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+    const chartTitle = document.getElementById('chartTitle');
+    const xLabels = document.getElementById('xLabels');
+    const yLabels = document.getElementById('yLabels');
+    const xLabel = document.getElementById('xLabel');
+    const yLabel = document.getElementById('yLabel');
+    const zLabel = document.getElementById('zLabel');
+    const barColor = document.getElementById('barColor');
+    const edgeColor = document.getElementById('edgeColor');
+    const bgColor = document.getElementById('bgColor');
+    const fontSize = document.getElementById('fontSize');
+    const titleFontSize = document.getElementById('titleFontSize');
+    const figWidth = document.getElementById('figWidth');
+    const figHeight = document.getElementById('figHeight');
+    const showValues = document.getElementById('showValues');
+    const elev = document.getElementById('elev');
+    const azim = document.getElementById('azim');
+    const rowCount = document.getElementById('rowCount');
+    const colCount = document.getElementById('colCount');
+    const updateMatrixBtn = document.getElementById('updateMatrixBtn');
+    const matrixInputContainer = document.getElementById('matrixInputContainer');
+
+    // 生成矩阵输入框
+    function generateMatrixInputs() {
+        const rows = parseInt(rowCount.value) || 3;
+        const cols = parseInt(colCount.value) || 3;
+        
+        const clampedRows = Math.max(1, Math.min(10, rows));
+        const clampedCols = Math.max(1, Math.min(10, cols));
+        
+        if (clampedRows !== rows) rowCount.value = clampedRows;
+        if (clampedCols !== cols) colCount.value = clampedCols;
+        
+        let html = '';
+        for (let i = 0; i < clampedRows; i++) {
+            const defaultData = Array.from({length: clampedCols}, () => Math.floor(Math.random() * 30) + 10).join(',');
+            html += `
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label for="row_${i}">行 ${i+1} (${yLabels.value.split(',').map(s=>s.trim()).filter(s=>s)[i] || `系列${i+1}`}) <span class="optional">(用逗号分隔)</span></label>
+                    <input type="text" id="row_${i}" class="matrix-input" value="${defaultData}" placeholder="例如: 10,20,15">
+                    <div class="help-text">输入 ${clampedCols} 个数字，用英文逗号分隔</div>
+                </div>
+            `;
+        }
+        matrixInputContainer.innerHTML = html;
+    }
+
+    // 更新矩阵输入
+    updateMatrixBtn.addEventListener('click', generateMatrixInputs);
+
+    // Y轴标签变化时更新行标签
+    yLabels.addEventListener('change', generateMatrixInputs);
+
+    // 初始化时生成
+    document.addEventListener('DOMContentLoaded', generateMatrixInputs);
+
+    function buildConfig() {
+        const rows = parseInt(rowCount.value) || 3;
+        const cols = parseInt(colCount.value) || 3;
+        
+        const data = [];
+        let isValid = true;
+        
+        for (let i = 0; i < rows; i++) {
+            const input = document.getElementById(`row_${i}`);
+            if (!input) continue;
+            
+            const values = parseData(input.value);
+            if (values.length !== cols) {
+                showError(`行 ${i+1} 数据数量(${values.length})与列数(${cols})不一致`);
+                isValid = false;
+                break;
+            }
+            data.push(values);
+        }
+        
+        if (!isValid) return null;
+        
+        const xLabelsList = parseStringList(xLabels.value) || null;
+        const yLabelsList = parseStringList(yLabels.value) || null;
+        
+        if (xLabelsList && xLabelsList.length !== cols) {
+            showError(`X轴标签数量(${xLabelsList.length})与列数(${cols})不一致`);
+            return null;
+        }
+        if (yLabelsList && yLabelsList.length !== rows) {
+            showError(`Y轴标签数量(${yLabelsList.length})与行数(${rows})不一致`);
+            return null;
+        }
+
+        return {
+            type: 'bar_3d',
+            title: chartTitle.value.trim() || '3D柱状图',
+            data: data,
+            x_labels: xLabelsList,
+            y_labels: yLabelsList,
+            x_label: xLabel.value.trim() || null,
+            y_label: yLabel.value.trim() || null,
+            z_label: zLabel.value.trim() || null,
+            bar_color: barColor.value,
+            edge_color: edgeColor.value,
+            background_color: bgColor.value,
+            font_size: parseInt(fontSize.value) || 11,
+            title_font_size: parseInt(titleFontSize.value) || 16,
+            fig_width: parseFloat(figWidth.value) || 10,
+            fig_height: parseFloat(figHeight.value) || 8,
+            show_values: showValues.checked,
+            elev: parseInt(elev.value) || 25,
+            azim: parseInt(azim.value) || 45
+        };
+    }
+
+    // 回车键生成
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.classList.contains('matrix-input')) {
+            generateBtn.click();
+        }
+    });
+
+    console.log('📊 3D柱状图生成器已加载');
+</script>
+{% endblock %}

@@ -112,6 +112,34 @@
     <input type="text" id="customColors" placeholder="例如: #FF6B6B,#4ECDC4,#45B7D1,#FFA07A,#98D8C8">
     <div class="help-text">为每个柱子单独设置颜色，数量应与数据数量一致</div>
 </div>
+
+<!-- ✅ 轴范围控制 -->
+<div class="form-section" style="margin-top: 15px; background: #f8f9fa; border-radius: 12px; padding: 15px; border: 1px solid #e9ecef;">
+    <div class="form-section-title" style="margin-bottom: 10px; font-size: 14px;">
+        📏 轴范围控制 <span class="badge optional" style="font-size: 11px;">选填</span>
+    </div>
+    <div class="row">
+        <div class="form-group">
+            <label for="xMin">X轴最小值</label>
+            <input type="number" id="xMin" placeholder="自动" step="any">
+        </div>
+        <div class="form-group">
+            <label for="xMax">X轴最大值</label>
+            <input type="number" id="xMax" placeholder="自动" step="any">
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group">
+            <label for="yMin">Y轴最小值</label>
+            <input type="number" id="yMin" placeholder="自动" step="any">
+        </div>
+        <div class="form-group">
+            <label for="yMax">Y轴最大值</label>
+            <input type="number" id="yMax" placeholder="自动" step="any">
+        </div>
+    </div>
+    <div class="help-text" style="margin-top: 5px;">💡 留空则自动计算最佳范围</div>
+</div>
 {% endblock %}
 
 {% block generate_button_text %}🚀 生成柱状图{% endblock %}
@@ -141,6 +169,22 @@
     const showValues = document.getElementById('showValues');
     const customColors = document.getElementById('customColors');
 
+    // ✅ 安全获取元素值的辅助函数
+    function getVal(id) {
+        const el = document.getElementById(id);
+        return el ? el.value : '';
+    }
+    
+    function getNum(id) {
+        const el = document.getElementById(id);
+        return el && el.value ? parseFloat(el.value) : null;
+    }
+    
+    function getChecked(id) {
+        const el = document.getElementById(id);
+        return el ? el.checked : false;
+    }
+
     // 覆盖 buildConfig 函数
     function buildConfig() {
         const dataStr = chartData.value.trim();
@@ -151,47 +195,52 @@
             return null;
         }
 
+        // 验证X轴刻度标签
         let xTicksList = null;
-        if (xTicks.value.trim()) {
-            xTicksList = parseStringList(xTicks.value);
+        const xTicksVal = getVal('xTicks');
+        if (xTicksVal.trim()) {
+            xTicksList = parseStringList(xTicksVal);
             if (xTicksList.length !== data.length) {
                 showError(`X轴标签数量(${xTicksList.length})与数据数量(${data.length})不一致`);
                 return null;
             }
         }
 
+        // 验证自定义颜色
         let customColorsList = null;
-        if (customColors.value.trim()) {
-            customColorsList = parseStringList(customColors.value);
+        const customColorsVal = getVal('customColors');
+        if (customColorsVal.trim()) {
+            customColorsList = parseStringList(customColorsVal);
             if (customColorsList.length !== data.length) {
                 showError(`自定义颜色数量(${customColorsList.length})与数据数量(${data.length})不一致`);
                 return null;
             }
         }
 
+        // ✅ 构建配置对象
         return {
             type: 'bar',
-            title: chartTitle.value.trim() || '柱状图',
+            title: getVal('chartTitle').trim() || '柱状图',
             data: data,
-            x_label: xLabel.value.trim() || null,
-            y_label: yLabel.value.trim() || null,
+            x_label: getVal('xLabel').trim() || null,
+            y_label: getVal('yLabel').trim() || null,
             x_ticks: xTicksList,
-            bar_color: barColor.value,
-            edge_color: edgeColor.value,
-            background_color: bgColor.value,
-            bar_width: parseFloat(barWidth.value) || 0.6,
-            font_size: parseInt(fontSize.value) || 12,
-            title_font_size: parseInt(titleFontSize.value) || 16,
-            fig_width: parseFloat(figWidth.value) || 10,
-            fig_height: parseFloat(figHeight.value) || 6,
-            show_grid: showGrid.checked,
-            show_values: showValues.checked,
+            bar_color: getVal('barColor') || '#667eea',
+            edge_color: getVal('edgeColor') || '#5a6fd6',
+            background_color: getVal('bgColor') || '#ffffff',
+            bar_width: parseFloat(getVal('barWidth')) || 0.6,
+            font_size: parseInt(getVal('fontSize')) || 12,
+            title_font_size: parseInt(getVal('titleFontSize')) || 16,
+            fig_width: parseFloat(getVal('figWidth')) || 10,
+            fig_height: parseFloat(getVal('figHeight')) || 6,
+            show_grid: getChecked('showGrid'),
+            show_values: getChecked('showValues'),
             custom_colors: customColorsList,
-            // 轴范围控制
-            x_min: document.getElementById('xMin').value ? parseFloat(document.getElementById('xMin').value) : null,
-            x_max: document.getElementById('xMax').value ? parseFloat(document.getElementById('xMax').value) : null,
-            y_min: document.getElementById('yMin').value ? parseFloat(document.getElementById('yMin').value) : null,
-            y_max: document.getElementById('yMax').value ? parseFloat(document.getElementById('yMax').value) : null
+            // ✅ 轴范围（安全获取，元素不存在时返回 null）
+            x_min: getNum('xMin'),
+            x_max: getNum('xMax'),
+            y_min: getNum('yMin'),
+            y_max: getNum('yMax')
         };
     }
 
@@ -202,6 +251,6 @@
         }
     });
 
-    console.log('🐖 柱状图生成器已加载');
+    console.log('📊 柱状图生成器已加载');
 </script>
 {% endblock %}

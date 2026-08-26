@@ -18,7 +18,7 @@ def main_index():
 def charts_index():
     return render_template('index_graphic.html')
 
-# === 各图表页面 ===
+# === 2D图表页面 ===
 @app.route('/bar-chart')
 def bar_chart():
     return render_template('bar_chart.html')
@@ -35,8 +35,28 @@ def line_chart():
 def scatter_chart():
     return render_template('scatter_chart.html')
 
-# app.py 中修改 /api/chart 路由
+@app.route('/heatmap-chart')
+def heatmap_chart():
+    return render_template('heatmap_chart.html')
 
+# === 3D图表页面 ===
+@app.route('/bar-3d-chart')
+def bar_3d_chart():
+    return render_template('bar_3d_chart.html')
+
+@app.route('/pie-3d-chart')
+def pie_3d_chart():
+    return render_template('pie_3d_chart.html')
+
+@app.route('/line-3d-chart')
+def line_3d_chart():
+    return render_template('line_3d_chart.html')
+
+@app.route('/surface-chart')
+def surface_chart():
+    return render_template('surface_chart.html')
+
+# === API：生成图表 ===
 @app.route('/api/chart', methods=['POST'])
 def chart_api():
     try:
@@ -46,7 +66,6 @@ def chart_api():
         generator = ChartFactory.create(chart_type, data)
         result = generator.generate()
         
-        # ✅ 处理散点图返回的拟合信息
         if isinstance(result, dict):
             response_data = {
                 'success': True,
@@ -74,9 +93,13 @@ def download_chart():
         filename = data.get('filename', 'chart')
         chart_type = data.get('type', 'bar')
         
-        # 使用工厂创建生成器
         generator = ChartFactory.create(chart_type, data)
-        image_base64 = generator.generate()
+        result = generator.generate()
+        
+        if isinstance(result, dict):
+            image_base64 = result.get('image', '')
+        else:
+            image_base64 = result
         
         if ',' in image_base64:
             image_base64 = image_base64.split(',')[1]

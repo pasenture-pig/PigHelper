@@ -410,36 +410,6 @@
             {% block advanced_settings %}
             <!-- 由子模板实现 -->
             {% endblock %}
-            
-            <!-- ✅ 轴范围控制 - 只保留这一个 -->
-            {% block axis_range %}
-            <div class="form-section" style="margin-top: 15px; background: #f8f9fa; border-radius: 12px; padding: 15px; border: 1px solid #e9ecef;">
-                <div class="form-section-title" style="margin-bottom: 10px; font-size: 14px;">
-                    📏 轴范围控制 <span class="badge optional" style="font-size: 11px;">选填</span>
-                </div>
-                <div class="row">
-                    <div class="form-group">
-                        <label for="xMin">X轴最小值</label>
-                        <input type="number" id="xMin" placeholder="自动" step="any">
-                    </div>
-                    <div class="form-group">
-                        <label for="xMax">X轴最大值</label>
-                        <input type="number" id="xMax" placeholder="自动" step="any">
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="form-group">
-                        <label for="yMin">Y轴最小值</label>
-                        <input type="number" id="yMin" placeholder="自动" step="any">
-                    </div>
-                    <div class="form-group">
-                        <label for="yMax">Y轴最大值</label>
-                        <input type="number" id="yMax" placeholder="自动" step="any">
-                    </div>
-                </div>
-                <div class="help-text" style="margin-top: 5px;">💡 留空则自动计算最佳范围</div>
-            </div>
-            {% endblock %}
         </div>
     </div>
     
@@ -449,15 +419,24 @@
         <button class="btn btn-success" id="downloadBtn" disabled>💾 下载图表</button>
     </div>
     
-    <div class="download-options" id="downloadOptions">
-        <select class="format-select" id="formatSelect">
-            <option value="png">PNG</option>
-            <option value="jpg">JPG</option>
-            <option value="pdf">PDF</option>
-        </select>
-        <input type="text" class="format-select" id="filenameInput" placeholder="文件名" value="chart">
-        <button class="btn btn-warning" id="downloadWithOptionsBtn" disabled>⬇️ 下载</button>
+    <!-- 下载选项 - 图表生成后显示 -->
+<div class="download-options" id="downloadOptions">
+    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; width: 100%; justify-content: center;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-size: 14px; color: #555; font-weight: 500; margin: 0; white-space: nowrap;">📄 文件名</label>
+            <input type="text" class="format-select" id="filenameInput" placeholder="输入文件名" value="chart" style="width: 160px; padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-size: 14px; color: #555; font-weight: 500; margin: 0; white-space: nowrap;">💾 格式</label>
+            <select class="format-select" id="formatSelect" style="width: 100px; padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; background: white;">
+                <option value="png">PNG</option>
+                <option value="jpg">JPG</option>
+                <option value="pdf">PDF</option>
+            </select>
+        </div>
+        <button class="btn btn-warning" id="downloadWithOptionsBtn" disabled style="flex: 0 1 auto; min-width: 80px; padding: 10px 24px;">⬇️ 下载</button>
     </div>
+</div>
     
     <div class="loading" id="loading">
         <div class="spinner"></div>
@@ -474,15 +453,15 @@
     <div class="hint-text" id="hintText">
         {% block hint_text %}💡 提示：填写基础信息后点击"生成图表"，高级选项可定制更多细节{% endblock %}
     </div>
-    <!-- 在 chart_base.html 的 hint-text 后面添加 -->
-<div id="fitInfoContainer" style="display: none; margin-top: 20px; padding: 15px; background: #f0f4ff; border-radius: 10px; border: 1px solid #c7d2fe;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <h4 style="color: #333; margin: 0;">📐 拟合参数</h4>
-        <span id="fitTypeBadge" style="padding: 2px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; background: #667eea; color: white;"></span>
-    </div>
-    <pre id="fitParamsDisplay" style="margin: 0; padding: 10px; background: white; border-radius: 8px; font-size: 14px; line-height: 1.8; white-space: pre-wrap; font-family: 'Consolas', 'Courier New', monospace; border: 1px solid #e9ecef;"></pre>
-</div>
     
+    <!-- 拟合参数显示区域（仅散点图使用） -->
+    <div id="fitInfoContainer" style="display: none; margin-top: 20px; padding: 15px; background: #f0f4ff; border-radius: 10px; border: 1px solid #c7d2fe;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h4 style="color: #333; margin: 0;">📐 拟合参数</h4>
+            <span id="fitTypeBadge" style="padding: 2px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; background: #667eea; color: white;"></span>
+        </div>
+        <pre id="fitParamsDisplay" style="margin: 0; padding: 10px; background: white; border-radius: 8px; font-size: 14px; line-height: 1.8; white-space: pre-wrap; font-family: 'Consolas', 'Courier New', monospace; border: 1px solid #e9ecef;"></pre>
+    </div>
 </div>
 {% endblock %}
 

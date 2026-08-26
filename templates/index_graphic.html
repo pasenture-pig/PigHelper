@@ -26,6 +26,28 @@
         font-size: 18px;
     }
     
+    .section-divider {
+        text-align: center;
+        padding: 20px 0 10px;
+        color: #999;
+        font-size: 14px;
+        letter-spacing: 2px;
+        position: relative;
+    }
+    
+    .section-divider::before,
+    .section-divider::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        width: 30%;
+        height: 1px;
+        background: #e0e0e0;
+    }
+    
+    .section-divider::before { left: 0; }
+    .section-divider::after { right: 0; }
+    
     .tools-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -149,6 +171,10 @@
         font-weight: 600;
     }
     
+    .tool-badge.three-d {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
     @media (max-width: 768px) {
         .tools-hero h1 {
             font-size: 26px;
@@ -167,37 +193,72 @@
     <p>选择你需要的图表类型，精细控制每一个细节</p>
 </div>
 
+<!-- 2D图表 -->
+<div class="section-divider">📐 2D 图表</div>
 <div class="tools-grid">
-    <!-- 柱状图 -->
     <a href="/bar-chart" class="tool-card">
         <span class="tool-badge">热门</span>
         <span class="icon">📊</span>
         <h3>柱状图</h3>
         <p>比较不同类别的数据，清晰展示分布情况</p>
-
     </a>
     
-    <!-- 折线图 -->
     <a href="/line-chart" class="tool-card">
         <span class="icon">📈</span>
         <h3>折线图</h3>
         <p>展示数据随时间或顺序的变化趋势</p>
-
     </a>
     
-    <!-- 饼图 -->
     <a href="/pie-chart" class="tool-card">
         <span class="icon">🥧</span>
         <h3>饼图</h3>
         <p>展示数据的组成部分和比例关系</p>
-
     </a>
     
-    <!-- 散点图 -->
     <a href="/scatter-chart" class="tool-card">
         <span class="icon">🔵</span>
         <h3>散点图(支持拟合)</h3>
         <p>展示两个变量之间的关系和分布</p>
     </a>
+
+    <a href="/heatmap-chart" class="tool-card">
+    <span class="icon">🔥</span>
+    <h3>热力图</h3>
+    <p>直观展示二维数据的分布和密度</p>
+    </a>
+
+</div>
+
+<!-- 3D图表 -->
+<div class="section-divider">🎲 3D 图表</div>
+<div class="tools-grid">
+    <a href="/bar-3d-chart" class="tool-card">
+        <span class="tool-badge three-d">3D</span>
+        <span class="icon">📊</span>
+        <h3>3D柱状图</h3>
+        <p>在三维空间中展示多维度数据对比</p>
+    </a>
+    
+    <a href="/line-3d-chart" class="tool-card">
+        <span class="tool-badge three-d">3D</span>
+        <span class="icon">📈</span>
+        <h3>3D折线图</h3>
+        <p>在三维空间中展示多系列数据变化趋势</p>
+    </a>
+    
+    <a href="/pie-3d-chart" class="tool-card">
+        <span class="tool-badge three-d">3D</span>
+        <span class="icon">🥧</span>
+        <h3>3D饼图</h3>
+        <p>让饼图立起来，展示更生动的比例关系</p>
+    </a>
+
+    <a href="/surface-chart" class="tool-card">
+    <span class="tool-badge">NEW</span>
+    <span class="icon">🏔️</span>
+    <h3>曲面热力图</h3>
+    <p>3D曲面 + 热力图，立体展示数据分布</p>
+</a>
+
 </div>
 {% endblock %}

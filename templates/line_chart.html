@@ -4,7 +4,7 @@
 
 {% block chart_title %}📈 折线图生成器{% endblock %}
 
-{% block chart_subtitle %}展示数据的变化趋势和走向{% endblock %}
+{% block chart_subtitle %}展示数据随时间或顺序的变化趋势，支持多系列对比{% endblock %}
 
 {% block basic_settings %}
 <div class="form-group">
@@ -13,15 +13,9 @@
 </div>
 
 <div class="form-group">
-    <label for="chartData">数据（用逗号分隔）</label>
-    <input type="text" id="chartData" value="10,20,15,30,25,35" placeholder="例如: 10,20,15,30,25">
-    <div class="help-text">单个系列数据，用英文逗号分隔</div>
-</div>
-
-<div class="form-group">
-    <label for="xData">X轴数据 <span class="optional">(选填，用逗号分隔)</span></label>
-    <input type="text" id="xData" placeholder="例如: 1,2,3,4,5,6">
-    <div class="help-text">自定义X轴数值，数量应与数据一致，留空则自动生成</div>
+    <label for="xLabels">X轴标签 <span class="optional">(选填，用逗号分隔)</span></label>
+    <input type="text" id="xLabels" placeholder="例如: 1月,2月,3月,4月,5月" value="1月,2月,3月,4月,5月">
+    <div class="help-text">自定义X轴显示的文字，数量应与数据点数量一致</div>
 </div>
 
 <div class="row">
@@ -35,29 +29,46 @@
     </div>
 </div>
 
-<div class="form-group">
-    <label for="xTicks">X轴刻度标签 <span class="optional">(选填，用逗号分隔)</span></label>
-    <input type="text" id="xTicks" placeholder="例如: 1月,2月,3月,4月,5月,6月">
-    <div class="help-text">自定义X轴显示的文字，数量应与数据数量一致</div>
+<!-- 数据系列管理 -->
+<div class="form-section" style="margin-top: 15px; background: #f0f4ff; border-radius: 12px; padding: 15px; border: 1px solid #c7d2fe;">
+    <div class="form-section-title" style="margin-bottom: 10px; font-size: 14px;">
+        📊 数据系列
+        <span class="badge" style="font-size: 11px;">必填</span>
+    </div>
+    
+    <div class="row" style="margin-bottom: 10px;">
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="seriesCount">系列数量</label>
+            <input type="number" id="seriesCount" value="2" min="1" max="5" step="1">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="pointCount">数据点数</label>
+            <input type="number" id="pointCount" value="5" min="2" max="20" step="1">
+        </div>
+    </div>
+    <button class="btn btn-primary" id="updateSeriesBtn" style="padding: 8px 20px; font-size: 14px; flex: 0 1 auto; min-width: auto;">更新数据输入</button>
+    <div class="help-text" style="margin-top: 8px;">💡 修改系列数量或数据点数后点击"更新数据输入"</div>
+</div>
+
+<div id="seriesInputContainer">
+    <!-- 由 JavaScript 动态生成 -->
 </div>
 {% endblock %}
 
 {% block advanced_settings %}
+<!-- ✅ 颜色设置 - 每个系列单独设置 -->
+<div class="form-section" style="margin-top: 15px; background: #f8f9fa; border-radius: 12px; padding: 15px; border: 1px solid #e9ecef;">
+    <div class="form-section-title" style="margin-bottom: 10px; font-size: 14px;">
+        🎨 系列颜色
+        <span class="badge optional" style="font-size: 11px;">选填</span>
+    </div>
+    <div id="colorInputContainer">
+        <!-- 由 JavaScript 动态生成 -->
+    </div>
+    <div class="help-text" style="margin-top: 8px;">💡 每个系列可以单独设置颜色，留空使用默认颜色</div>
+</div>
+
 <div class="row-3">
-    <div class="form-group">
-        <label>线条颜色</label>
-        <div class="color-picker-group">
-            <input type="color" id="lineColor" value="#667eea">
-            <span class="color-label">主色</span>
-        </div>
-    </div>
-    <div class="form-group">
-        <label>辅助色</label>
-        <div class="color-picker-group">
-            <input type="color" id="lineColor2" value="#764ba2">
-            <span class="color-label">辅助色</span>
-        </div>
-    </div>
     <div class="form-group">
         <label>背景颜色</label>
         <div class="color-picker-group">
@@ -65,9 +76,6 @@
             <span class="color-label">背景色</span>
         </div>
     </div>
-</div>
-
-<div class="row-3">
     <div class="form-group">
         <label for="lineWidth">线宽 <span class="optional">(1-5)</span></label>
         <input type="number" id="lineWidth" value="2.5" min="1" max="5" step="0.5">
@@ -76,17 +84,20 @@
         <label for="markerSize">标记大小 <span class="optional">(2-15)</span></label>
         <input type="number" id="markerSize" value="8" min="2" max="15" step="1">
     </div>
-    <div class="form-group">
-        <label for="fontSize">字体大小 <span class="optional">(8-20)</span></label>
-        <input type="number" id="fontSize" value="12" min="8" max="20" step="1">
-    </div>
 </div>
 
 <div class="row">
     <div class="form-group">
+        <label for="fontSize">字体大小 <span class="optional">(8-20)</span></label>
+        <input type="number" id="fontSize" value="12" min="8" max="20" step="1">
+    </div>
+    <div class="form-group">
         <label for="titleFontSize">标题字体大小 <span class="optional">(10-30)</span></label>
         <input type="number" id="titleFontSize" value="16" min="10" max="30" step="1">
     </div>
+</div>
+
+<div class="row">
     <div class="form-group">
         <label>图片尺寸 <span class="optional">(英寸)</span></label>
         <div class="row" style="gap: 10px;">
@@ -94,9 +105,6 @@
             <input type="number" id="figHeight" value="6" min="3" max="15" step="0.5" placeholder="高">
         </div>
     </div>
-</div>
-
-<div class="row">
     <div class="form-group">
         <label for="markerStyle">标记样式</label>
         <select id="markerStyle">
@@ -111,12 +119,6 @@
             <option value="none">无标记</option>
         </select>
     </div>
-    <div class="form-group">
-        <div class="checkbox-group" style="margin-top: 25px;">
-            <input type="checkbox" id="fillArea">
-            <label for="fillArea">填充面积</label>
-        </div>
-    </div>
 </div>
 
 <div class="row">
@@ -130,6 +132,21 @@
         <div class="checkbox-group">
             <input type="checkbox" id="showValues" checked>
             <label for="showValues">显示数值标签</label>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <div class="checkbox-group">
+            <input type="checkbox" id="fillArea">
+            <label for="fillArea">填充面积</label>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="checkbox-group">
+            <input type="checkbox" id="showLegend" checked>
+            <label for="showLegend">显示图例</label>
         </div>
     </div>
 </div>
@@ -167,20 +184,22 @@
 
 {% block loading_text %}正在生成折线图...{% endblock %}
 
-{% block hint_text %}💡 提示：折线图适合展示数据随时间或顺序的变化趋势{% endblock %}
+{% block hint_text %}💡 提示：支持多系列数据对比，每个系列可单独设置颜色{% endblock %}
 
 {% block extra_js %}
 {{ super() }}
 <script>
-    // 折线图特定的DOM元素
+    // DOM元素
     const chartTitle = document.getElementById('chartTitle');
-    const chartData = document.getElementById('chartData');
-    const xData = document.getElementById('xData');
+    const xLabels = document.getElementById('xLabels');
     const xLabel = document.getElementById('xLabel');
     const yLabel = document.getElementById('yLabel');
-    const xTicks = document.getElementById('xTicks');
-    const lineColor = document.getElementById('lineColor');
-    const lineColor2 = document.getElementById('lineColor2');
+    const seriesCount = document.getElementById('seriesCount');
+    const pointCount = document.getElementById('pointCount');
+    const updateSeriesBtn = document.getElementById('updateSeriesBtn');
+    const seriesInputContainer = document.getElementById('seriesInputContainer');
+    const colorInputContainer = document.getElementById('colorInputContainer');
+    
     const bgColor = document.getElementById('bgColor');
     const lineWidth = document.getElementById('lineWidth');
     const markerSize = document.getElementById('markerSize');
@@ -192,56 +211,113 @@
     const showGrid = document.getElementById('showGrid');
     const showValues = document.getElementById('showValues');
     const fillArea = document.getElementById('fillArea');
+    const showLegend = document.getElementById('showLegend');
     const xMin = document.getElementById('xMin');
     const xMax = document.getElementById('xMax');
     const yMin = document.getElementById('yMin');
     const yMax = document.getElementById('yMax');
 
-    // 覆盖 buildConfig 函数
+    // 默认颜色列表
+    const defaultColors = ['#667eea', '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A'];
+
+    // 生成系列输入框和颜色输入框
+    function generateSeriesInputs() {
+        const nSeries = parseInt(seriesCount.value) || 2;
+        const nPoints = parseInt(pointCount.value) || 5;
+        
+        const clampedSeries = Math.max(1, Math.min(5, nSeries));
+        const clampedPoints = Math.max(2, Math.min(20, nPoints));
+        
+        if (clampedSeries !== nSeries) seriesCount.value = clampedSeries;
+        if (clampedPoints !== nPoints) pointCount.value = clampedPoints;
+        
+        // 生成数据输入框
+        let html = '';
+        for (let i = 0; i < clampedSeries; i++) {
+            const defaultData = Array.from({length: clampedPoints}, () => Math.floor(Math.random() * 30) + 5).join(',');
+            html += `
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label for="series_${i}">系列 ${i+1} 名称</label>
+                    <div class="row" style="gap: 10px;">
+                        <input type="text" id="series_name_${i}" class="series-name-input" value="系列${i+1}" placeholder="系列名称" style="flex: 1;">
+                        <input type="text" id="series_${i}" class="series-input" value="${defaultData}" placeholder="例如: 10,20,15,30,25" style="flex: 3;">
+                    </div>
+                    <div class="help-text">输入 ${clampedPoints} 个数字，用英文逗号分隔</div>
+                </div>
+            `;
+        }
+        seriesInputContainer.innerHTML = html;
+        
+        // 生成颜色输入框
+        let colorHtml = '<div class="row">';
+        for (let i = 0; i < clampedSeries; i++) {
+            colorHtml += `
+                <div class="form-group" style="margin-bottom: 5px;">
+                    <label style="font-size: 13px;">系列${i+1}</label>
+                    <div class="color-picker-group">
+                        <input type="color" id="series_color_${i}" value="${defaultColors[i % defaultColors.length]}">
+                        <span class="color-label">颜色</span>
+                    </div>
+                </div>
+            `;
+        }
+        colorHtml += '</div>';
+        colorInputContainer.innerHTML = colorHtml;
+    }
+
+    // 更新系列输入
+    updateSeriesBtn.addEventListener('click', generateSeriesInputs);
+
+    // 初始化时生成
+    document.addEventListener('DOMContentLoaded', generateSeriesInputs);
+
+    // 构建配置
     function buildConfig() {
-        const dataStr = chartData.value.trim();
-        const data = parseData(dataStr);
-
-        if (data.length === 0) {
-            showError('请输入有效的数字数据，用逗号分隔');
+        const nSeries = parseInt(seriesCount.value) || 2;
+        const nPoints = parseInt(pointCount.value) || 5;
+        
+        const data = {};
+        const colors = [];
+        let isValid = true;
+        
+        for (let i = 0; i < nSeries; i++) {
+            const input = document.getElementById(`series_${i}`);
+            const nameInput = document.getElementById(`series_name_${i}`);
+            const colorInput = document.getElementById(`series_color_${i}`);
+            
+            if (!input) continue;
+            
+            const values = parseData(input.value);
+            if (values.length !== nPoints) {
+                showError(`系列 ${i+1} 数据数量(${values.length})与预期点数(${nPoints})不一致`);
+                isValid = false;
+                break;
+            }
+            
+            const name = nameInput ? nameInput.value.trim() || `系列${i+1}` : `系列${i+1}`;
+            data[name] = values;
+            
+            if (colorInput) {
+                colors.push(colorInput.value);
+            }
+        }
+        
+        if (!isValid) return null;
+        
+        const xLabelsList = parseStringList(xLabels.value) || null;
+        
+        if (xLabelsList && xLabelsList.length !== nPoints) {
+            showError(`X轴标签数量(${xLabelsList.length})与数据点数量(${nPoints})不一致`);
             return null;
-        }
-
-        // 收集X轴数据
-        let xDataList = null;
-        if (xData.value.trim()) {
-            xDataList = parseData(xData.value);
-            if (xDataList.length !== data.length) {
-                showError(`X轴数据数量(${xDataList.length})与数据数量(${data.length})不一致`);
-                return null;
-            }
-        }
-
-        // 收集X轴刻度标签
-        let xTicksList = null;
-        if (xTicks.value.trim()) {
-            xTicksList = parseStringList(xTicks.value);
-            if (xTicksList.length !== data.length) {
-                showError(`X轴标签数量(${xTicksList.length})与数据数量(${data.length})不一致`);
-                return null;
-            }
-        }
-
-        // 构建颜色方案
-        const colors = [lineColor.value];
-        // 如果有辅助色，添加到颜色列表（用于未来多系列支持）
-        if (lineColor2.value && lineColor2.value !== lineColor.value) {
-            colors.push(lineColor2.value);
         }
 
         return {
             type: 'line',
             title: chartTitle.value.trim() || '折线图',
             data: data,
-            x_data: xDataList,
+            x_labels: xLabelsList,
             x_label: xLabel.value.trim() || null,
             y_label: yLabel.value.trim() || null,
-            x_ticks: xTicksList,
             colors: colors,
             line_width: parseFloat(lineWidth.value) || 2.5,
             marker: markerStyle.value === 'none' ? '' : markerStyle.value,
@@ -254,6 +330,7 @@
             background_color: bgColor.value,
             show_grid: showGrid.checked,
             show_values: showValues.checked,
+            show_legend: showLegend.checked,
             x_min: xMin.value ? parseFloat(xMin.value) : null,
             x_max: xMax.value ? parseFloat(xMax.value) : null,
             y_min: yMin.value ? parseFloat(yMin.value) : null,
@@ -262,12 +339,12 @@
     }
 
     // 回车键生成
-    chartData.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && (e.target.classList.contains('series-input') || e.target.classList.contains('series-name-input'))) {
             generateBtn.click();
         }
     });
 
-    console.log('📈 折线图生成器已加载');
+    console.log('📈 折线图生成器已加载（支持多系列、自定义颜色和图例）');
 </script>
 {% endblock %}
