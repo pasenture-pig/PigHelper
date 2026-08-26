@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>欢迎</title>
+    <style>
+        body { font-family: Arial; padding: 30px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        select, input, button { padding: 10px; margin: 5px; }
+        #chartImg { max-width: 100%; margin-top: 20px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 在线图表生成器</h1>
+        
+        <div>
+            <label>图表类型：</label>
+            <select id="chartType">
+                <option value="bar">柱状图</option>
+                <option value="line">折线图</option>
+                <option value="pie">饼图</option>
+            </select>
+        </div>
+        
+        <div>
+            <label>数据（用逗号分隔）：</label>
+            <input type="text" id="chartData" value="10,20,30,40,50">
+        </div>
+        
+        <button onclick="generateChart()">🚀 生成图表</button>
+        
+        <div id="loading" style="display:none;">生成中...</div>
+        <img id="chartImg" />
+    </div>
+
+    <script>
+        function generateChart() {
+            const type = document.getElementById('chartType').value;
+            const dataStr = document.getElementById('chartData').value;
+            const data = dataStr.split(',').map(Number);  // 转成数字数组
+            
+            // 显示加载状态
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('chartImg').style.display = 'none';
+            
+            // 调用后端API
+            fetch('http://localhost:5000/api/chart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: type, data: data })
+            })
+            .then(res => res.json())
+            .then(result => {
+                document.getElementById('loading').style.display = 'none';
+                if (result.success) {
+                    // 显示图表（base64图片）
+                    document.getElementById('chartImg').src = 'data:image/png;base64,' + result.image;
+                    document.getElementById('chartImg').style.display = 'block';
+                } else {
+                    alert('出错了：' + result.error);
+                }
+            })
+            .catch(err => {
+                document.getElementById('loading').style.display = 'none';
+                alert('请求失败：' + err.message);
+            });
+        }
+    </script>
+</body>
+</html>
