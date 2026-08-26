@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}图表生成器{% endblock %}</title>
+    
+    <!-- 全局样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* 顶部导航 */
+        .navbar {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .navbar-brand:hover {
+            color: #667eea;
+        }
+        
+        .navbar-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-link {
+            padding: 8px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #666;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .nav-link:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .nav-link.active:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .nav-link .badge {
+            background: #f59e0b;
+            color: white;
+            padding: 1px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+        
+        .nav-link .badge.coming {
+            background: #999;
+        }
+        
+        /* 主要内容卡片 */
+        .main-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 15px 20px;
+            }
+            
+            .navbar-links {
+                justify-content: center;
+            }
+            
+            .main-card {
+                padding: 20px;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="container">
+        <!-- 导航栏 -->
+        <nav class="navbar">
+            <a href="/" class="navbar-brand">
+                📊 图表生成器
+            </a>
+            <div class="navbar-links">
+                <a href="/" class="nav-link {% block nav_home %}{% endblock %}">
+                    🏠 首页
+                </a>
+                <a href="/bar-chart" class="nav-link {% block nav_bar %}{% endblock %}">
+                    📊 柱状图
+                    <span class="badge">可用</span>
+                </a>
+                <a href="#" class="nav-link" style="opacity:0.5;cursor:not-allowed;">
+                    📈 折线图
+                    <span class="badge coming">即将推出</span>
+                </a>
+                <a href="#" class="nav-link" style="opacity:0.5;cursor:not-allowed;">
+                    🥧 饼图
+                    <span class="badge coming">即将推出</span>
+                </a>
+            </div>
+        </nav>
+        
+        <!-- 主要内容 -->
+        <div class="main-card">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    
+    <!-- 全局脚本 -->
+    <script>
+        // 全局工具函数
+        function showNotification(message, type = 'info') {
+            // 可以在这里添加全局通知功能
+            console.log(`[${type}] ${message}`);
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

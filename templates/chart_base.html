@@ -1,0 +1,623 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    /* 图表页面通用样式 */
+    .back-to-home {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: #f0f0f0;
+        border: none;
+        border-radius: 8px;
+        color: #666;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        margin-bottom: 20px;
+    }
+    
+    .back-to-home:hover {
+        background: #e0e0e0;
+        transform: translateX(-3px);
+    }
+    
+    .page-header {
+        margin-bottom: 25px;
+    }
+    
+    .page-header h1 {
+        margin-bottom: 5px;
+        color: #333;
+    }
+    
+    .page-header .subtitle {
+        color: #888;
+        font-size: 16px;
+    }
+    
+    .form-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .form-section-title {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 15px;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .form-section-title .badge {
+        background: #667eea;
+        color: white;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+    }
+    
+    .form-section-title .badge.optional {
+        background: #f59e0b;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+    
+    label {
+        display: block;
+        margin-bottom: 6px;
+        color: #555;
+        font-weight: 500;
+        font-size: 14px;
+    }
+    
+    label .optional {
+        color: #999;
+        font-weight: 400;
+        font-size: 12px;
+    }
+    
+    select, input, textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s;
+        background: white;
+    }
+    
+    select:focus, input:focus, textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    textarea {
+        resize: vertical;
+        min-height: 60px;
+        font-family: inherit;
+    }
+    
+    .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+    
+    .row-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 15px;
+    }
+    
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 5px;
+    }
+    
+    .checkbox-group input[type="checkbox"] {
+        width: auto;
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+    
+    .checkbox-group label {
+        margin: 0;
+        cursor: pointer;
+        font-weight: 400;
+    }
+    
+    .color-picker-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    
+    .color-picker-group input[type="color"] {
+        width: 50px;
+        height: 40px;
+        padding: 2px;
+        border: 2px solid #e0e0e0;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+    
+    .color-picker-group .color-label {
+        font-size: 13px;
+        color: #666;
+    }
+    
+    .help-text {
+        font-size: 12px;
+        color: #999;
+        margin-top: 4px;
+    }
+    
+    .button-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        flex: 1;
+        min-width: 120px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-success {
+        background: #10b981;
+        color: white;
+    }
+    
+    .btn-success:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(16, 185, 129, 0.4);
+    }
+    
+    .btn-warning {
+        background: #f59e0b;
+        color: white;
+    }
+    
+    .btn-warning:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(245, 158, 11, 0.4);
+    }
+    
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+    
+    .chart-container {
+        margin-top: 30px;
+        text-align: center;
+        display: none;
+    }
+    
+    .chart-container.active {
+        display: block;
+    }
+    
+    #chartImage {
+        max-width: 100%;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        border: 2px solid #f0f0f0;
+    }
+    
+    .loading {
+        text-align: center;
+        padding: 40px;
+        display: none;
+    }
+    
+    .loading.active {
+        display: block;
+    }
+    
+    .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .error {
+        color: #ef4444;
+        margin-top: 10px;
+        padding: 12px;
+        background: #fee;
+        border-radius: 8px;
+        display: none;
+        border-left: 4px solid #ef4444;
+    }
+    
+    .success {
+        color: #10b981;
+        margin-top: 10px;
+        padding: 12px;
+        background: #d1fae5;
+        border-radius: 8px;
+        display: none;
+        border-left: 4px solid #10b981;
+    }
+    
+    .download-options {
+        display: none;
+        gap: 10px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .download-options.active {
+        display: flex;
+    }
+    
+    .format-select {
+        padding: 8px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+    
+    .hint-text {
+        margin-top: 20px;
+        color: #aaa;
+        font-size: 14px;
+        text-align: center;
+    }
+    
+    .hint-text.active {
+        display: none;
+    }
+    
+    .advanced-toggle {
+        color: #667eea;
+        cursor: pointer;
+        font-size: 14px;
+        user-select: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-left: 10px;
+    }
+    
+    .advanced-toggle:hover {
+        color: #5a6fd6;
+    }
+    
+    .advanced-content {
+        display: none;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px dashed #dee2e6;
+    }
+    
+    .advanced-content.active {
+        display: block;
+    }
+    
+    @media (max-width: 768px) {
+        .row, .row-3 {
+            grid-template-columns: 1fr;
+        }
+        
+        .button-group {
+            flex-direction: column;
+        }
+        
+        .btn {
+            min-width: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 返回首页按钮 -->
+<a href="/" class="back-to-home">← 返回首页</a>
+
+<!-- 页面标题 -->
+<div class="page-header">
+    <h1>{% block chart_title %}图表生成器{% endblock %}</h1>
+    <p class="subtitle">{% block chart_subtitle %}精细控制你的图表每一个细节{% endblock %}</p>
+</div>
+
+<!-- 基础设置 -->
+<div class="form-section">
+    <div class="form-section-title">
+        {% block basic_section_title %}📝 基础设置{% endblock %}
+        <span class="badge">必填</span>
+    </div>
+    
+    {% block basic_settings %}
+    <!-- 由子模板实现 -->
+    {% endblock %}
+</div>
+
+<!-- 高级选项 -->
+<div class="form-section">
+    <div class="form-section-title">
+        {% block advanced_section_title %}⚙️ 高级选项{% endblock %}
+        <span class="badge optional">选填</span>
+        <span class="advanced-toggle" id="advancedToggle">▼ 展开</span>
+    </div>
+    
+    <div class="advanced-content" id="advancedContent">
+        {% block advanced_settings %}
+        <!-- 由子模板实现 -->
+        {% endblock %}
+    </div>
+</div>
+
+<!-- 按钮组 -->
+<div class="button-group">
+    <button class="btn btn-primary" id="generateBtn">{% block generate_button_text %}🚀 生成图表{% endblock %}</button>
+    <button class="btn btn-success" id="downloadBtn" disabled>💾 下载图表</button>
+</div>
+
+<div class="download-options" id="downloadOptions">
+    <select class="format-select" id="formatSelect">
+        <option value="png">PNG</option>
+        <option value="jpg">JPG</option>
+        <option value="pdf">PDF</option>
+    </select>
+    <input type="text" class="format-select" id="filenameInput" placeholder="文件名" value="chart">
+    <button class="btn btn-warning" id="downloadWithOptionsBtn" disabled>⬇️ 下载</button>
+</div>
+
+<div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p style="margin-top: 15px; color: #666;">{% block loading_text %}正在生成图表...{% endblock %}</p>
+</div>
+
+<div class="error" id="errorMsg"></div>
+<div class="success" id="successMsg"></div>
+
+<div class="chart-container" id="chartContainer">
+    <img id="chartImage" alt="生成的图表">
+</div>
+
+<div class="hint-text" id="hintText">
+    {% block hint_text %}💡 提示：填写基础信息后点击"生成图表"，高级选项可定制更多细节{% endblock %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+    // 图表通用JavaScript
+    // 这些变量和方法会被子模板继承和覆盖
+    
+    // 状态变量
+    let currentChartBase64 = null;
+    let currentConfig = null;
+    let isGenerating = false;
+    
+    // DOM元素（通用）
+    const generateBtn = document.getElementById('generateBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const downloadOptions = document.getElementById('downloadOptions');
+    const formatSelect = document.getElementById('formatSelect');
+    const filenameInput = document.getElementById('filenameInput');
+    const downloadWithOptionsBtn = document.getElementById('downloadWithOptionsBtn');
+    const loading = document.getElementById('loading');
+    const chartContainer = document.getElementById('chartContainer');
+    const chartImage = document.getElementById('chartImage');
+    const errorMsg = document.getElementById('errorMsg');
+    const successMsg = document.getElementById('successMsg');
+    const hintText = document.getElementById('hintText');
+    const advancedToggle = document.getElementById('advancedToggle');
+    const advancedContent = document.getElementById('advancedContent');
+    
+    // 高级选项展开/折叠
+    let advancedOpen = false;
+    if (advancedToggle && advancedContent) {
+        advancedToggle.addEventListener('click', () => {
+            advancedOpen = !advancedOpen;
+            advancedContent.classList.toggle('active', advancedOpen);
+            advancedToggle.textContent = advancedOpen ? '▲ 收起' : '▼ 展开';
+        });
+    }
+    
+    // 构建配置（由子模板覆盖）
+    function buildConfig() {
+        // 子模板应该实现这个函数
+        console.warn('buildConfig() 应该在子模板中实现');
+        return {};
+    }
+    
+    // 生成图表
+    generateBtn.addEventListener('click', async () => {
+        if (isGenerating) return;
+        
+        // 构建配置
+        const config = buildConfig();
+        if (!config) return;
+        
+        currentConfig = config;
+        
+        // 显示加载状态
+        isGenerating = true;
+        generateBtn.disabled = true;
+        loading.classList.add('active');
+        chartContainer.classList.remove('active');
+        downloadBtn.disabled = true;
+        downloadOptions.classList.remove('active');
+        downloadWithOptionsBtn.disabled = true;
+        hintText.classList.add('active');
+        hideMessages();
+        
+        try {
+            const response = await fetch('/api/chart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(config)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                currentChartBase64 = result.image;
+                chartImage.src = result.image;
+                chartContainer.classList.add('active');
+                downloadBtn.disabled = false;
+                downloadOptions.classList.add('active');
+                downloadWithOptionsBtn.disabled = false;
+                hintText.classList.remove('active');
+                showSuccess('✅ 图表生成成功！');
+            } else {
+                showError('生成失败: ' + result.error);
+                hintText.classList.remove('active');
+            }
+        } catch (error) {
+            showError('网络错误: ' + error.message);
+            hintText.classList.remove('active');
+        } finally {
+            loading.classList.remove('active');
+            generateBtn.disabled = false;
+            isGenerating = false;
+        }
+    });
+    
+    // 下载图表
+    downloadWithOptionsBtn.addEventListener('click', async () => {
+        if (!currentChartBase64 || !currentConfig) {
+            showError('请先生成图表');
+            return;
+        }
+        
+        const format = formatSelect.value;
+        const filename = filenameInput.value.trim() || 'chart';
+        
+        downloadWithOptionsBtn.disabled = true;
+        downloadWithOptionsBtn.textContent = '下载中...';
+        
+        try {
+            const response = await fetch('/api/download', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...currentConfig,
+                    format: format,
+                    filename: filename
+                })
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || '下载失败');
+            }
+            
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${filename}.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            showSuccess('✅ 下载成功！');
+            setTimeout(() => hideMessages(), 3000);
+            
+        } catch (error) {
+            showError('下载失败: ' + error.message);
+        } finally {
+            downloadWithOptionsBtn.disabled = false;
+            downloadWithOptionsBtn.textContent = '⬇️ 下载';
+        }
+    });
+    
+    // 快捷下载
+    downloadBtn.addEventListener('click', () => {
+        formatSelect.value = 'png';
+        downloadWithOptionsBtn.click();
+    });
+    
+    // 辅助函数
+    function showError(msg) {
+        errorMsg.textContent = '❌ ' + msg;
+        errorMsg.style.display = 'block';
+        successMsg.style.display = 'none';
+    }
+    
+    function showSuccess(msg) {
+        successMsg.textContent = msg;
+        successMsg.style.display = 'block';
+        errorMsg.style.display = 'none';
+    }
+    
+    function hideMessages() {
+        errorMsg.style.display = 'none';
+        successMsg.style.display = 'none';
+    }
+    
+    // 工具函数：解析逗号分隔的数据
+    function parseData(str) {
+        return str.split(',').map(s => parseFloat(s.trim())).filter(v => !isNaN(v));
+    }
+    
+    // 工具函数：解析逗号分隔的字符串列表
+    function parseStringList(str) {
+        return str.split(',').map(s => s.trim()).filter(s => s);
+    }
+</script>
+{% endblock %}

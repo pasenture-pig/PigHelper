@@ -1,4 +1,3 @@
-#包装器
 from flask import Flask, request, jsonify, render_template, send_file
 from flask_cors import CORS
 from chart_generator import generate_chart  # 导入你的核心函数
@@ -9,12 +8,17 @@ from PIL import Image
 app = Flask(__name__)
 CORS(app)
 
-# 路由1：提供前端页面
+# 路由1：首页
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# 路由2：处理图表生成请求（支持精细控制）
+# 路由2：柱状图页面
+@app.route('/bar-chart')
+def bar_chart():
+    return render_template('bar_chart.html')
+
+# 路由3：处理图表生成请求
 @app.route('/api/chart', methods=['POST'])
 def chart_api():
     try:
@@ -22,7 +26,7 @@ def chart_api():
         
         # 提取所有参数，提供默认值
         chart_config = {
-            'type': 'bar',  # 固定为柱状图
+            'type': data.get('type', 'bar'),
             'title': data.get('title', '柱状图'),
             'data': data.get('data', [10, 20, 15, 30, 25]),
             'x_label': data.get('x_label'),
@@ -51,7 +55,7 @@ def chart_api():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
-# 路由3：处理图表下载
+# 路由4：处理图表下载
 @app.route('/api/download', methods=['POST'])
 def download_chart():
     try:
