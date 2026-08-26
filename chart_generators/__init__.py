@@ -1,16 +1,62 @@
 # chart_generators/__init__.py
-from .bar_generator import generate_bar_chart
-from .pie_generator import generate_pie_chart
-from .line_generator import generate_line_chart
-from .scatter_generator import generate_scatter_chart
-from .font_config import setup_chinese_font
+from .base import ChartGenerator
+from .bar_chart import BarChartGenerator
+from .pie_chart import PieChartGenerator
+from .line_chart import LineChartGenerator
+from .scatter_chart import ScatterChartGenerator
 
-# 确保字体已配置
-setup_chinese_font()
+
+class ChartFactory:
+    """图表工厂类"""
+    
+    _generators = {
+        'bar': BarChartGenerator,
+        'pie': PieChartGenerator,
+        'line': LineChartGenerator,
+        'scatter': ScatterChartGenerator,
+    }
+    
+    @classmethod
+    def create(cls, chart_type, config):
+        """
+        创建图表生成器实例
+        
+        参数:
+            chart_type: 图表类型 (bar, pie, line, scatter)
+            config: 图表配置字典
+        
+        返回:
+            图表生成器实例
+        
+        异常:
+            ValueError: 不支持的图表类型
+        """
+        generator_class = cls._generators.get(chart_type)
+        if not generator_class:
+            raise ValueError(f'不支持的图表类型: {chart_type}')
+        return generator_class(config)
+    
+    @classmethod
+    def get_types(cls):
+        """获取所有支持的图表类型"""
+        return list(cls._generators.keys())
+
+# 保持向后兼容的函数（可选）
+def generate_chart(config):
+    """
+    生成图表（兼容旧版本调用方式）
+    """
+    chart_type = config.get('type', 'bar')
+    generator = ChartFactory.create(chart_type, config)
+    return generator.generate()
+
 
 __all__ = [
-    'generate_bar_chart',
-    'generate_pie_chart', 
-    'generate_line_chart',
-    'generate_scatter_chart'
+    'ChartGenerator',
+    'BarChartGenerator',
+    'PieChartGenerator',
+    'LineChartGenerator',
+    'ScatterChartGenerator',
+    'ChartFactory',
+    'generate_chart',
 ]

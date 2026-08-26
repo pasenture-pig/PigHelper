@@ -1,25 +1,12 @@
 from flask import Flask, request, jsonify, render_template, send_file
 from flask_cors import CORS
-from chart_generators import (
-    generate_bar_chart,
-    generate_pie_chart,
-    generate_line_chart,
-    generate_scatter_chart
-)
+from chart_generators import ChartFactory, generate_chart
 import io
 import base64
 from PIL import Image
 
 app = Flask(__name__)
 CORS(app)
-
-# 图表生成器映射
-GENERATORS = {
-    'bar': generate_bar_chart,
-    'pie': generate_pie_chart,
-    'line': generate_line_chart,
-    'scatter': generate_scatter_chart
-}
 
 # === 网站主页面 ===
 @app.route('/')
@@ -48,28 +35,33 @@ def line_chart():
 def scatter_chart():
     return render_template('scatter_chart.html')
 
-# === API：生成图表 ===
+# app.py 中修改 /api/chart 路由
+
 @app.route('/api/chart', methods=['POST'])
 def chart_api():
     try:
         data = request.get_json()
         chart_type = data.get('type', 'bar')
         
-        # 获取对应的生成器
-        generator = GENERATORS.get(chart_type)
-        if not generator:
-            return jsonify({
-                'success': False, 
-                'error': f'不支持的图表类型: {chart_type}'
-            }), 400
+        generator = ChartFactory.create(chart_type, data)
+        result = generator.generate()
         
-        # 调用对应的生成器
-        image_base64 = generator(data)
+        # ✅ 处理散点图返回的拟合信息
+        if isinstance(result, dict):
+            response_data = {
+                'success': True,
+                'image': result.get('image', ''),
+                'fit_info': result.get('fit_info')
+            }
+        else:
+            response_data = {
+                'success': True,
+                'image': result
+            }
         
-        return jsonify({
-            'success': True,
-            'image': image_base64
-        })
+        return jsonify(response_data)
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
@@ -82,16 +74,9 @@ def download_chart():
         filename = data.get('filename', 'chart')
         chart_type = data.get('type', 'bar')
         
-        # 获取对应的生成器
-        generator = GENERATORS.get(chart_type)
-        if not generator:
-            return jsonify({
-                'success': False, 
-                'error': f'不支持的图表类型: {chart_type}'
-            }), 400
-        
-        # 重新生成图表
-        image_base64 = generator(data)
+        # 使用工厂创建生成器
+        generator = ChartFactory.create(chart_type, data)
+        image_base64 = generator.generate()
         
         if ',' in image_base64:
             image_base64 = image_base64.split(',')[1]
@@ -139,8 +124,10 @@ def download_chart():
                 download_name=f'{filename}.pdf'
             )
         else:
-            return jsonify({'success': False, 'error': 'Unsupported format'}), 400
+            return jsonify({'success': False, 'error': '不支持的格式'}), 400
             
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 

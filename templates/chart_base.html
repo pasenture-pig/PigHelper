@@ -398,50 +398,51 @@
         {% endblock %}
     </div>
     
-<!-- 高级选项 -->
-<div class="form-section">
-    <div class="form-section-title">
-        {% block advanced_section_title %}⚙️ 高级选项{% endblock %}
-        <span class="badge optional">选填</span>
-        <span class="advanced-toggle" id="advancedToggle">▼ 展开</span>
+    <!-- 高级选项 -->
+    <div class="form-section">
+        <div class="form-section-title">
+            {% block advanced_section_title %}⚙️ 高级选项{% endblock %}
+            <span class="badge optional">选填</span>
+            <span class="advanced-toggle" id="advancedToggle">▼ 展开</span>
+        </div>
+        
+        <div class="advanced-content" id="advancedContent">
+            {% block advanced_settings %}
+            <!-- 由子模板实现 -->
+            {% endblock %}
+            
+            <!-- ✅ 轴范围控制 - 只保留这一个 -->
+            {% block axis_range %}
+            <div class="form-section" style="margin-top: 15px; background: #f8f9fa; border-radius: 12px; padding: 15px; border: 1px solid #e9ecef;">
+                <div class="form-section-title" style="margin-bottom: 10px; font-size: 14px;">
+                    📏 轴范围控制 <span class="badge optional" style="font-size: 11px;">选填</span>
+                </div>
+                <div class="row">
+                    <div class="form-group">
+                        <label for="xMin">X轴最小值</label>
+                        <input type="number" id="xMin" placeholder="自动" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label for="xMax">X轴最大值</label>
+                        <input type="number" id="xMax" placeholder="自动" step="any">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group">
+                        <label for="yMin">Y轴最小值</label>
+                        <input type="number" id="yMin" placeholder="自动" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label for="yMax">Y轴最大值</label>
+                        <input type="number" id="yMax" placeholder="自动" step="any">
+                    </div>
+                </div>
+                <div class="help-text" style="margin-top: 5px;">💡 留空则自动计算最佳范围</div>
+            </div>
+            {% endblock %}
+        </div>
     </div>
     
-    <div class="advanced-content" id="advancedContent">
-        {% block advanced_settings %}
-        <!-- 由子模板实现 -->
-        {% endblock %}
-        
-        <!-- 轴范围控制 - 由子模板决定是否显示 -->
-        {% block axis_range %}
-        <div class="form-section" style="margin-top: 15px; background: #f8f9fa; border-radius: 12px; padding: 15px; border: 1px solid #e9ecef;">
-            <div class="form-section-title" style="margin-bottom: 10px; font-size: 14px;">
-                📏 轴范围控制 <span class="badge optional" style="font-size: 11px;">选填</span>
-            </div>
-            <div class="row">
-                <div class="form-group">
-                    <label for="xMin">X轴最小值</label>
-                    <input type="number" id="xMin" placeholder="自动" step="any">
-                </div>
-                <div class="form-group">
-                    <label for="xMax">X轴最大值</label>
-                    <input type="number" id="xMax" placeholder="自动" step="any">
-                </div>
-            </div>
-            <div class="row">
-                <div class="form-group">
-                    <label for="yMin">Y轴最小值</label>
-                    <input type="number" id="yMin" placeholder="自动" step="any">
-                </div>
-                <div class="form-group">
-                    <label for="yMax">Y轴最大值</label>
-                    <input type="number" id="yMax" placeholder="自动" step="any">
-                </div>
-            </div>
-            <div class="help-text" style="margin-top: 5px;">💡 留空则自动计算最佳范围</div>
-        </div>
-        {% endblock %}
-    </div>
-</div>
     <!-- 按钮组 -->
     <div class="button-group">
         <button class="btn btn-primary" id="generateBtn">{% block generate_button_text %}🚀 生成图表{% endblock %}</button>
@@ -473,6 +474,15 @@
     <div class="hint-text" id="hintText">
         {% block hint_text %}💡 提示：填写基础信息后点击"生成图表"，高级选项可定制更多细节{% endblock %}
     </div>
+    <!-- 在 chart_base.html 的 hint-text 后面添加 -->
+<div id="fitInfoContainer" style="display: none; margin-top: 20px; padding: 15px; background: #f0f4ff; border-radius: 10px; border: 1px solid #c7d2fe;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h4 style="color: #333; margin: 0;">📐 拟合参数</h4>
+        <span id="fitTypeBadge" style="padding: 2px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; background: #667eea; color: white;"></span>
+    </div>
+    <pre id="fitParamsDisplay" style="margin: 0; padding: 10px; background: white; border-radius: 8px; font-size: 14px; line-height: 1.8; white-space: pre-wrap; font-family: 'Consolas', 'Courier New', monospace; border: 1px solid #e9ecef;"></pre>
+</div>
+    
 </div>
 {% endblock %}
 
