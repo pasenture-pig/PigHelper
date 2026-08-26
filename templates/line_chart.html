@@ -1,0 +1,273 @@
+{% extends "chart_base.html" %}
+
+{% block title %}折线图生成器 - 猪咪小帮手{% endblock %}
+
+{% block chart_title %}📈 折线图生成器{% endblock %}
+
+{% block chart_subtitle %}展示数据的变化趋势和走向{% endblock %}
+
+{% block basic_settings %}
+<div class="form-group">
+    <label for="chartTitle">图表标题</label>
+    <input type="text" id="chartTitle" value="折线图示例" placeholder="输入图表标题">
+</div>
+
+<div class="form-group">
+    <label for="chartData">数据（用逗号分隔）</label>
+    <input type="text" id="chartData" value="10,20,15,30,25,35" placeholder="例如: 10,20,15,30,25">
+    <div class="help-text">单个系列数据，用英文逗号分隔</div>
+</div>
+
+<div class="form-group">
+    <label for="xData">X轴数据 <span class="optional">(选填，用逗号分隔)</span></label>
+    <input type="text" id="xData" placeholder="例如: 1,2,3,4,5,6">
+    <div class="help-text">自定义X轴数值，数量应与数据一致，留空则自动生成</div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <label for="xLabel">X轴标签 <span class="optional">(选填)</span></label>
+        <input type="text" id="xLabel" placeholder="例如: 时间" value="时间">
+    </div>
+    <div class="form-group">
+        <label for="yLabel">Y轴标签 <span class="optional">(选填)</span></label>
+        <input type="text" id="yLabel" placeholder="例如: 数值" value="数值">
+    </div>
+</div>
+
+<div class="form-group">
+    <label for="xTicks">X轴刻度标签 <span class="optional">(选填，用逗号分隔)</span></label>
+    <input type="text" id="xTicks" placeholder="例如: 1月,2月,3月,4月,5月,6月">
+    <div class="help-text">自定义X轴显示的文字，数量应与数据数量一致</div>
+</div>
+{% endblock %}
+
+{% block advanced_settings %}
+<div class="row-3">
+    <div class="form-group">
+        <label>线条颜色</label>
+        <div class="color-picker-group">
+            <input type="color" id="lineColor" value="#667eea">
+            <span class="color-label">主色</span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>辅助色</label>
+        <div class="color-picker-group">
+            <input type="color" id="lineColor2" value="#764ba2">
+            <span class="color-label">辅助色</span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>背景颜色</label>
+        <div class="color-picker-group">
+            <input type="color" id="bgColor" value="#ffffff">
+            <span class="color-label">背景色</span>
+        </div>
+    </div>
+</div>
+
+<div class="row-3">
+    <div class="form-group">
+        <label for="lineWidth">线宽 <span class="optional">(1-5)</span></label>
+        <input type="number" id="lineWidth" value="2.5" min="1" max="5" step="0.5">
+    </div>
+    <div class="form-group">
+        <label for="markerSize">标记大小 <span class="optional">(2-15)</span></label>
+        <input type="number" id="markerSize" value="8" min="2" max="15" step="1">
+    </div>
+    <div class="form-group">
+        <label for="fontSize">字体大小 <span class="optional">(8-20)</span></label>
+        <input type="number" id="fontSize" value="12" min="8" max="20" step="1">
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <label for="titleFontSize">标题字体大小 <span class="optional">(10-30)</span></label>
+        <input type="number" id="titleFontSize" value="16" min="10" max="30" step="1">
+    </div>
+    <div class="form-group">
+        <label>图片尺寸 <span class="optional">(英寸)</span></label>
+        <div class="row" style="gap: 10px;">
+            <input type="number" id="figWidth" value="10" min="4" max="20" step="0.5" placeholder="宽">
+            <input type="number" id="figHeight" value="6" min="3" max="15" step="0.5" placeholder="高">
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <label for="markerStyle">标记样式</label>
+        <select id="markerStyle">
+            <option value="o">圆形 ●</option>
+            <option value="s">方形 ■</option>
+            <option value="^">三角形 ▲</option>
+            <option value="d">菱形 ◆</option>
+            <option value="p">五边形 ⬠</option>
+            <option value="*">星形 ★</option>
+            <option value="x">叉号 ✕</option>
+            <option value="+">加号 ✚</option>
+            <option value="none">无标记</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <div class="checkbox-group" style="margin-top: 25px;">
+            <input type="checkbox" id="fillArea">
+            <label for="fillArea">填充面积</label>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <div class="checkbox-group">
+            <input type="checkbox" id="showGrid" checked>
+            <label for="showGrid">显示网格线</label>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="checkbox-group">
+            <input type="checkbox" id="showValues" checked>
+            <label for="showValues">显示数值标签</label>
+        </div>
+    </div>
+</div>
+
+<!-- 轴范围控制 -->
+<div class="form-section" style="margin-top: 15px; background: #f8f9fa; border-radius: 12px; padding: 15px; border: 1px solid #e9ecef;">
+    <div class="form-section-title" style="margin-bottom: 10px; font-size: 14px;">
+        📏 轴范围控制 <span class="badge optional" style="font-size: 11px;">选填</span>
+    </div>
+    <div class="row">
+        <div class="form-group">
+            <label for="xMin">X轴最小值</label>
+            <input type="number" id="xMin" placeholder="自动" step="any">
+        </div>
+        <div class="form-group">
+            <label for="xMax">X轴最大值</label>
+            <input type="number" id="xMax" placeholder="自动" step="any">
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group">
+            <label for="yMin">Y轴最小值</label>
+            <input type="number" id="yMin" placeholder="自动" step="any">
+        </div>
+        <div class="form-group">
+            <label for="yMax">Y轴最大值</label>
+            <input type="number" id="yMax" placeholder="自动" step="any">
+        </div>
+    </div>
+    <div class="help-text" style="margin-top: 5px;">💡 留空则自动计算最佳范围</div>
+</div>
+{% endblock %}
+
+{% block generate_button_text %}📈 生成折线图{% endblock %}
+
+{% block loading_text %}正在生成折线图...{% endblock %}
+
+{% block hint_text %}💡 提示：折线图适合展示数据随时间或顺序的变化趋势{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+    // 折线图特定的DOM元素
+    const chartTitle = document.getElementById('chartTitle');
+    const chartData = document.getElementById('chartData');
+    const xData = document.getElementById('xData');
+    const xLabel = document.getElementById('xLabel');
+    const yLabel = document.getElementById('yLabel');
+    const xTicks = document.getElementById('xTicks');
+    const lineColor = document.getElementById('lineColor');
+    const lineColor2 = document.getElementById('lineColor2');
+    const bgColor = document.getElementById('bgColor');
+    const lineWidth = document.getElementById('lineWidth');
+    const markerSize = document.getElementById('markerSize');
+    const markerStyle = document.getElementById('markerStyle');
+    const fontSize = document.getElementById('fontSize');
+    const titleFontSize = document.getElementById('titleFontSize');
+    const figWidth = document.getElementById('figWidth');
+    const figHeight = document.getElementById('figHeight');
+    const showGrid = document.getElementById('showGrid');
+    const showValues = document.getElementById('showValues');
+    const fillArea = document.getElementById('fillArea');
+    const xMin = document.getElementById('xMin');
+    const xMax = document.getElementById('xMax');
+    const yMin = document.getElementById('yMin');
+    const yMax = document.getElementById('yMax');
+
+    // 覆盖 buildConfig 函数
+    function buildConfig() {
+        const dataStr = chartData.value.trim();
+        const data = parseData(dataStr);
+
+        if (data.length === 0) {
+            showError('请输入有效的数字数据，用逗号分隔');
+            return null;
+        }
+
+        // 收集X轴数据
+        let xDataList = null;
+        if (xData.value.trim()) {
+            xDataList = parseData(xData.value);
+            if (xDataList.length !== data.length) {
+                showError(`X轴数据数量(${xDataList.length})与数据数量(${data.length})不一致`);
+                return null;
+            }
+        }
+
+        // 收集X轴刻度标签
+        let xTicksList = null;
+        if (xTicks.value.trim()) {
+            xTicksList = parseStringList(xTicks.value);
+            if (xTicksList.length !== data.length) {
+                showError(`X轴标签数量(${xTicksList.length})与数据数量(${data.length})不一致`);
+                return null;
+            }
+        }
+
+        // 构建颜色方案
+        const colors = [lineColor.value];
+        // 如果有辅助色，添加到颜色列表（用于未来多系列支持）
+        if (lineColor2.value && lineColor2.value !== lineColor.value) {
+            colors.push(lineColor2.value);
+        }
+
+        return {
+            type: 'line',
+            title: chartTitle.value.trim() || '折线图',
+            data: data,
+            x_data: xDataList,
+            x_label: xLabel.value.trim() || null,
+            y_label: yLabel.value.trim() || null,
+            x_ticks: xTicksList,
+            colors: colors,
+            line_width: parseFloat(lineWidth.value) || 2.5,
+            marker: markerStyle.value === 'none' ? '' : markerStyle.value,
+            marker_size: parseInt(markerSize.value) || 8,
+            fill_area: fillArea.checked,
+            font_size: parseInt(fontSize.value) || 12,
+            title_font_size: parseInt(titleFontSize.value) || 16,
+            fig_width: parseFloat(figWidth.value) || 10,
+            fig_height: parseFloat(figHeight.value) || 6,
+            background_color: bgColor.value,
+            show_grid: showGrid.checked,
+            show_values: showValues.checked,
+            x_min: xMin.value ? parseFloat(xMin.value) : null,
+            x_max: xMax.value ? parseFloat(xMax.value) : null,
+            y_min: yMin.value ? parseFloat(yMin.value) : null,
+            y_max: yMax.value ? parseFloat(yMax.value) : null
+        };
+    }
+
+    // 回车键生成
+    chartData.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            generateBtn.click();
+        }
+    });
+
+    console.log('📈 折线图生成器已加载');
+</script>
+{% endblock %}

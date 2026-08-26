@@ -1,46 +1,40 @@
+# chart_generators/bar_generator.py
 import matplotlib.pyplot as plt
-import matplotlib
 import numpy as np
 import base64
 from io import BytesIO
-import matplotlib.font_manager as fm
+from .font_config import setup_chinese_font
 
-# 设置中文字体支持
-try:
-    # 尝试设置中文字体
-    plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'Arial Unicode MS', 'DejaVu Sans']
-    plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
-except:
-    pass
+# 确保字体已配置
+setup_chinese_font()
 
-def generate_chart(config):
+def generate_bar_chart(config):
     """
     生成柱状图
     
     参数:
-        config: 字典，包含以下键值：
+        config: 字典，包含：
             - title: 图表标题
             - data: 数据列表
             - x_label: X轴标签 (可选)
             - y_label: Y轴标签 (可选)
-            - x_ticks: X轴刻度标签列表 (可选)
+            - x_ticks: X轴刻度标签 (可选)
             - bar_color: 柱状图主色
             - edge_color: 边框颜色
             - background_color: 背景颜色
             - bar_width: 柱状图宽度 (0.1-1.0)
             - font_size: 字体大小
             - title_font_size: 标题字体大小
-            - fig_width: 图片宽度 (英寸)
-            - fig_height: 图片高度 (英寸)
+            - fig_width: 图片宽度
+            - fig_height: 图片高度
             - show_grid: 是否显示网格线
             - show_values: 是否显示数值标签
             - custom_colors: 自定义颜色列表 (可选)
-    
-    返回:
-        base64编码的图片字符串
+            - y_min: Y轴最小值
+            - y_max: Y轴最大值
     """
     
-    # 提取配置参数，提供默认值
+    # 提取配置参数
     title = config.get('title', '柱状图')
     data = config.get('data', [10, 20, 15, 30, 25])
     x_label = config.get('x_label')
@@ -57,6 +51,8 @@ def generate_chart(config):
     show_grid = config.get('show_grid', True)
     show_values = config.get('show_values', True)
     custom_colors = config.get('custom_colors')
+    y_min = config.get('y_min')
+    y_max = config.get('y_max')
     
     # 如果没有自定义颜色，使用主色
     if custom_colors:
@@ -66,8 +62,6 @@ def generate_chart(config):
     
     # 创建图形
     fig, ax = plt.subplots(figsize=(fig_width, fig_height))
-    
-    # 设置背景颜色
     fig.patch.set_facecolor(background_color)
     ax.set_facecolor(background_color)
     
@@ -96,9 +90,14 @@ def generate_chart(config):
         ax.set_xticks(x_positions)
         ax.set_xticklabels(x_ticks, fontsize=font_size)
     else:
-        # 自动生成X轴标签
         ax.set_xticks(x_positions)
         ax.set_xticklabels([f'Item {i+1}' for i in range(len(data))], fontsize=font_size)
+    
+    # 设置Y轴范围
+    if y_min is not None:
+        ax.set_ylim(bottom=float(y_min))
+    if y_max is not None:
+        ax.set_ylim(top=float(y_max))
     
     # 设置Y轴刻度字体大小
     ax.tick_params(axis='y', labelsize=font_size)
@@ -106,13 +105,12 @@ def generate_chart(config):
     # 显示网格线
     if show_grid:
         ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.8)
-        ax.set_axisbelow(True)  # 网格线在柱状图下方
+        ax.set_axisbelow(True)
     
     # 显示数值标签
     if show_values:
         for i, (bar, value) in enumerate(zip(bars, data)):
             height = bar.get_height()
-            # 在柱子上方显示数值
             ax.text(bar.get_x() + bar.get_width()/2., height,
                     f'{value}',
                     ha='center', va='bottom',
@@ -121,9 +119,10 @@ def generate_chart(config):
                     color='#333333')
     
     # 自动调整Y轴范围，留出一些空间显示数值标签
-    if show_values and data:
+    if show_values and data and y_min is None and y_max is None:
         max_value = max(data)
-        ax.set_ylim(0, max_value * 1.15 if max_value > 0 else 1)
+        if max_value > 0:
+            ax.set_ylim(0, max_value * 1.15)
     
     # 美化边框
     ax.spines['top'].set_visible(False)
@@ -131,7 +130,6 @@ def generate_chart(config):
     ax.spines['left'].set_color('#cccccc')
     ax.spines['bottom'].set_color('#cccccc')
     
-    # 自动调整布局
     plt.tight_layout()
     
     # 转换为base64
@@ -140,26 +138,7 @@ def generate_chart(config):
                 facecolor=fig.get_facecolor(), edgecolor='none')
     buffer.seek(0)
     
-    # 编码为base64
     image_base64 = base64.b64encode(buffer.read()).decode('utf-8')
     plt.close()
     
-    # 返回带前缀的base64字符串（方便前端直接显示）
     return f'data:image/png;base64,{image_base64}'
-
-
-# 为了兼容旧版本的简单调用方式
-def generate_simple_chart(chart_type, chart_data):
-    """
-    简单版本的图表生成（保持向后兼容）
-    """
-    config = {
-        'title': f'{chart_type} Chart',
-        'data': chart_data,
-        'bar_color': '#667eea',
-        'edge_color': '#5a6fd6',
-        'bar_width': 0.6,
-        'show_grid': True,
-        'show_values': True
-    }
-    return generate_chart(config)

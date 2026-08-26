@@ -1,0 +1,220 @@
+{% extends "chart_base.html" %}
+
+{% block title %}散点图生成器 - 猪咪小帮手{% endblock %}
+
+{% block chart_title %}🔵 散点图生成器{% endblock %}
+
+{% block chart_subtitle %}探索两个变量之间的关系和分布{% endblock %}
+
+{% block basic_settings %}
+<div class="form-group">
+    <label for="chartTitle">图表标题</label>
+    <input type="text" id="chartTitle" value="散点图示例" placeholder="输入图表标题">
+</div>
+
+<div class="form-group">
+    <label for="xData">X轴数据（用逗号分隔）</label>
+    <input type="text" id="xData" value="1,2,3,4,5,6,7,8,9,10" placeholder="例如: 1,2,3,4,5,6,7,8,9,10">
+    <div class="help-text">X轴数值，用英文逗号分隔</div>
+</div>
+
+<div class="form-group">
+    <label for="yData">Y轴数据（用逗号分隔）</label>
+    <input type="text" id="yData" value="2,4,1,5,3,7,6,8,10,9" placeholder="例如: 2,4,1,5,3,7,6,8,10,9">
+    <div class="help-text">Y轴数值，数量应与X轴数据一致</div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <label for="xLabel">X轴标签 <span class="optional">(选填)</span></label>
+        <input type="text" id="xLabel" placeholder="例如: 自变量" value="X 变量">
+    </div>
+    <div class="form-group">
+        <label for="yLabel">Y轴标签 <span class="optional">(选填)</span></label>
+        <input type="text" id="yLabel" placeholder="例如: 因变量" value="Y 变量">
+    </div>
+</div>
+{% endblock %}
+
+{% block advanced_settings %}
+<div class="row-3">
+    <div class="form-group">
+        <label>点颜色</label>
+        <div class="color-picker-group">
+            <input type="color" id="pointColor" value="#667eea">
+            <span class="color-label">主色</span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>趋势线颜色</label>
+        <div class="color-picker-group">
+            <input type="color" id="trendColor" value="#FF6B6B">
+            <span class="color-label">趋势色</span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>背景颜色</label>
+        <div class="color-picker-group">
+            <input type="color" id="bgColor" value="#ffffff">
+            <span class="color-label">背景色</span>
+        </div>
+    </div>
+</div>
+
+<div class="row-3">
+    <div class="form-group">
+        <label for="pointSize">点大小 <span class="optional">(10-200)</span></label>
+        <input type="number" id="pointSize" value="80" min="10" max="200" step="5">
+    </div>
+    <div class="form-group">
+        <label for="alpha">透明度 <span class="optional">(0.1-1.0)</span></label>
+        <input type="number" id="alpha" value="0.7" min="0.1" max="1.0" step="0.05">
+    </div>
+    <div class="form-group">
+        <label for="fontSize">字体大小 <span class="optional">(8-20)</span></label>
+        <input type="number" id="fontSize" value="12" min="8" max="20" step="1">
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <label for="titleFontSize">标题字体大小 <span class="optional">(10-30)</span></label>
+        <input type="number" id="titleFontSize" value="16" min="10" max="30" step="1">
+    </div>
+    <div class="form-group">
+        <label>图片尺寸 <span class="optional">(英寸)</span></label>
+        <div class="row" style="gap: 10px;">
+            <input type="number" id="figWidth" value="10" min="4" max="20" step="0.5" placeholder="宽">
+            <input type="number" id="figHeight" value="8" min="4" max="20" step="0.5" placeholder="高">
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <div class="checkbox-group">
+            <input type="checkbox" id="showGrid" checked>
+            <label for="showGrid">显示网格线</label>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="checkbox-group">
+            <input type="checkbox" id="showTrend" checked>
+            <label for="showTrend">显示趋势线</label>
+        </div>
+    </div>
+</div>
+
+<!-- 轴范围控制 -->
+<div class="form-section" style="margin-top: 15px; background: #f8f9fa; border-radius: 12px; padding: 15px; border: 1px solid #e9ecef;">
+    <div class="form-section-title" style="margin-bottom: 10px; font-size: 14px;">
+        📏 轴范围控制 <span class="badge optional" style="font-size: 11px;">选填</span>
+    </div>
+    <div class="row">
+        <div class="form-group">
+            <label for="xMin">X轴最小值</label>
+            <input type="number" id="xMin" placeholder="自动" step="any">
+        </div>
+        <div class="form-group">
+            <label for="xMax">X轴最大值</label>
+            <input type="number" id="xMax" placeholder="自动" step="any">
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group">
+            <label for="yMin">Y轴最小值</label>
+            <input type="number" id="yMin" placeholder="自动" step="any">
+        </div>
+        <div class="form-group">
+            <label for="yMax">Y轴最大值</label>
+            <input type="number" id="yMax" placeholder="自动" step="any">
+        </div>
+    </div>
+    <div class="help-text" style="margin-top: 5px;">💡 留空则自动计算最佳范围</div>
+</div>
+{% endblock %}
+
+{% block generate_button_text %}🔵 生成散点图{% endblock %}
+
+{% block loading_text %}正在生成散点图...{% endblock %}
+
+{% block hint_text %}💡 提示：散点图适合探索两个变量之间的相关关系和分布规律{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+    // 散点图特定的DOM元素
+    const chartTitle = document.getElementById('chartTitle');
+    const xData = document.getElementById('xData');
+    const yData = document.getElementById('yData');
+    const xLabel = document.getElementById('xLabel');
+    const yLabel = document.getElementById('yLabel');
+    const pointColor = document.getElementById('pointColor');
+    const trendColor = document.getElementById('trendColor');
+    const bgColor = document.getElementById('bgColor');
+    const pointSize = document.getElementById('pointSize');
+    const alpha = document.getElementById('alpha');
+    const fontSize = document.getElementById('fontSize');
+    const titleFontSize = document.getElementById('titleFontSize');
+    const figWidth = document.getElementById('figWidth');
+    const figHeight = document.getElementById('figHeight');
+    const showGrid = document.getElementById('showGrid');
+    const showTrend = document.getElementById('showTrend');
+    const xMin = document.getElementById('xMin');
+    const xMax = document.getElementById('xMax');
+    const yMin = document.getElementById('yMin');
+    const yMax = document.getElementById('yMax');
+
+    // 覆盖 buildConfig 函数
+    function buildConfig() {
+        const xDataStr = xData.value.trim();
+        const yDataStr = yData.value.trim();
+
+        const xDataList = parseData(xDataStr);
+        const yDataList = parseData(yDataStr);
+
+        if (xDataList.length === 0 || yDataList.length === 0) {
+            showError('请输入有效的X轴和Y轴数据，用逗号分隔');
+            return null;
+        }
+
+        if (xDataList.length !== yDataList.length) {
+            showError(`X轴数据数量(${xDataList.length})与Y轴数据数量(${yDataList.length})不一致`);
+            return null;
+        }
+
+        return {
+            type: 'scatter',
+            title: chartTitle.value.trim() || '散点图',
+            x_data: xDataList,
+            y_data: yDataList,
+            x_label: xLabel.value.trim() || null,
+            y_label: yLabel.value.trim() || null,
+            color: pointColor.value,
+            trend_color: trendColor.value,
+            size: parseInt(pointSize.value) || 80,
+            alpha: parseFloat(alpha.value) || 0.7,
+            font_size: parseInt(fontSize.value) || 12,
+            title_font_size: parseInt(titleFontSize.value) || 16,
+            fig_width: parseFloat(figWidth.value) || 10,
+            fig_height: parseFloat(figHeight.value) || 8,
+            background_color: bgColor.value,
+            show_grid: showGrid.checked,
+            show_trend: showTrend.checked,
+            x_min: xMin.value ? parseFloat(xMin.value) : null,
+            x_max: xMax.value ? parseFloat(xMax.value) : null,
+            y_min: yMin.value ? parseFloat(yMin.value) : null,
+            y_max: yMax.value ? parseFloat(yMax.value) : null
+        };
+    }
+
+    // Y轴数据回车生成
+    yData.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            generateBtn.click();
+        }
+    });
+
+    console.log('🔵 散点图生成器已加载');
+</script>
+{% endblock %}

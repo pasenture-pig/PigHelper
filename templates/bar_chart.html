@@ -1,8 +1,6 @@
 {% extends "chart_base.html" %}
 
-{% block title %}柱状图生成器{% endblock %}
-
-{% block nav_bar %}active{% endblock %}
+{% block title %}柱状图生成器 - 猪咪小帮手{% endblock %}
 
 {% block chart_title %}📊 柱状图生成器{% endblock %}
 
@@ -142,18 +140,17 @@
     const showGrid = document.getElementById('showGrid');
     const showValues = document.getElementById('showValues');
     const customColors = document.getElementById('customColors');
-    
+
     // 覆盖 buildConfig 函数
     function buildConfig() {
         const dataStr = chartData.value.trim();
         const data = parseData(dataStr);
-        
+
         if (data.length === 0) {
             showError('请输入有效的数字数据，用逗号分隔');
             return null;
         }
-        
-        // 收集X轴刻度标签
+
         let xTicksList = null;
         if (xTicks.value.trim()) {
             xTicksList = parseStringList(xTicks.value);
@@ -162,8 +159,7 @@
                 return null;
             }
         }
-        
-        // 收集自定义颜色
+
         let customColorsList = null;
         if (customColors.value.trim()) {
             customColorsList = parseStringList(customColors.value);
@@ -172,7 +168,7 @@
                 return null;
             }
         }
-        
+
         return {
             type: 'bar',
             title: chartTitle.value.trim() || '柱状图',
@@ -190,17 +186,22 @@
             fig_height: parseFloat(figHeight.value) || 6,
             show_grid: showGrid.checked,
             show_values: showValues.checked,
-            custom_colors: customColorsList
+            custom_colors: customColorsList,
+            // 轴范围控制
+            x_min: document.getElementById('xMin').value ? parseFloat(document.getElementById('xMin').value) : null,
+            x_max: document.getElementById('xMax').value ? parseFloat(document.getElementById('xMax').value) : null,
+            y_min: document.getElementById('yMin').value ? parseFloat(document.getElementById('yMin').value) : null,
+            y_max: document.getElementById('yMax').value ? parseFloat(document.getElementById('yMax').value) : null
         };
     }
-    
+
     // 回车键生成
     chartData.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             generateBtn.click();
         }
     });
-    
-    console.log('柱状图生成器已加载');
+
+    console.log('🐖 柱状图生成器已加载');
 </script>
 {% endblock %}

@@ -1,0 +1,228 @@
+{% extends "main_base.html" %}
+
+{% block title %}图表工具 - 猪咪小帮手{% endblock %}
+
+{% block nav_charts %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tools-hero {
+        text-align: center;
+        padding: 30px 20px 20px;
+        background: white;
+        border-radius: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    
+    .tools-hero h1 {
+        font-size: 32px;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .tools-hero p {
+        color: #888;
+        font-size: 18px;
+    }
+    
+    .tools-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+    }
+    
+    .tool-card {
+        background: white;
+        border-radius: 16px;
+        padding: 30px 25px;
+        text-align: center;
+        transition: all 0.3s;
+        border: 2px solid #f0f0f0;
+        text-decoration: none;
+        display: block;
+        color: #333;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .tool-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transform: scaleX(0);
+        transition: transform 0.3s;
+    }
+    
+    .tool-card:hover:not(.disabled)::before {
+        transform: scaleX(1);
+    }
+    
+    .tool-card:hover:not(.disabled) {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border-color: #667eea;
+    }
+    
+    .tool-card.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .tool-card .icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+        display: block;
+    }
+    
+    .tool-card h3 {
+        font-size: 20px;
+        margin-bottom: 8px;
+        color: #333;
+    }
+    
+    .tool-card p {
+        color: #888;
+        font-size: 14px;
+        margin-bottom: 15px;
+        line-height: 1.6;
+    }
+    
+    .tool-card .status {
+        display: inline-block;
+        padding: 4px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .status.available {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .status.coming-soon {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .tool-card .features {
+        list-style: none;
+        padding: 0;
+        margin: 15px 0 0;
+        text-align: left;
+        font-size: 13px;
+        color: #666;
+    }
+    
+    .tool-card .features li {
+        padding: 4px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .tool-card .features li::before {
+        content: "✓";
+        color: #10b981;
+        font-weight: bold;
+    }
+    
+    .features .coming::before {
+        content: "⏳";
+        color: #f59e0b;
+    }
+    
+    .tool-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #f59e0b;
+        color: white;
+        padding: 2px 12px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    
+    @media (max-width: 768px) {
+        .tools-hero h1 {
+            font-size: 26px;
+        }
+        
+        .tools-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tools-hero">
+    <h1>📊 图表工具</h1>
+    <p>选择你需要的图表类型，精细控制每一个细节</p>
+</div>
+
+<div class="tools-grid">
+    <!-- 柱状图 -->
+    <a href="/bar-chart" class="tool-card">
+        <span class="tool-badge">热门</span>
+        <span class="icon">📊</span>
+        <h3>柱状图</h3>
+        <p>比较不同类别的数据，清晰展示分布情况</p>
+        <span class="status available">✅ 可用</span>
+        <ul class="features">
+            <li>自定义标题和轴标签</li>
+            <li>多种颜色方案</li>
+            <li>数值标签显示</li>
+            <li>网格线控制</li>
+        </ul>
+    </a>
+    
+    <!-- 折线图 -->
+    <a href="/line-chart" class="tool-card">
+        <span class="icon">📈</span>
+        <h3>折线图</h3>
+        <p>展示数据随时间或顺序的变化趋势</p>
+        <span class="status available">✅ 可用</span>
+        <ul class="features">
+            <li>多系列数据支持</li>
+            <li>面积填充</li>
+            <li>数据点标记</li>
+            <li>趋势线展示</li>
+        </ul>
+    </a>
+    
+    <!-- 饼图 -->
+    <a href="/pie-chart" class="tool-card">
+        <span class="icon">🥧</span>
+        <h3>饼图</h3>
+        <p>展示数据的组成部分和比例关系</p>
+        <span class="status available">✅ 可用</span>
+        <ul class="features">
+            <li>百分比显示</li>
+            <li>扇形分离</li>
+            <li>自定义颜色</li>
+            <li>图例控制</li>
+        </ul>
+    </a>
+    
+    <!-- 散点图 -->
+    <a href="/scatter-chart" class="tool-card">
+        <span class="icon">🔵</span>
+        <h3>散点图</h3>
+        <p>展示两个变量之间的关系和分布</p>
+        <span class="status available">✅ 可用</span>
+        <ul class="features">
+            <li>相关性分析</li>
+            <li>气泡大小控制</li>
+            <li>趋势线</li>
+            <li>颜色映射</li>
+        </ul>
+    </a>
+</div>
+{% endblock %}

@@ -1,6 +1,11 @@
 from flask import Flask, request, jsonify, render_template, send_file
 from flask_cors import CORS
-from chart_generator import generate_chart  # 导入你的核心函数
+from chart_generators import (
+    generate_bar_chart,
+    generate_pie_chart,
+    generate_line_chart,
+    generate_scatter_chart
+)
 import io
 import base64
 from PIL import Image
@@ -8,45 +13,58 @@ from PIL import Image
 app = Flask(__name__)
 CORS(app)
 
-# 路由1：首页
-@app.route('/')
-def index():
-    return render_template('index.html')
+# 图表生成器映射
+GENERATORS = {
+    'bar': generate_bar_chart,
+    'pie': generate_pie_chart,
+    'line': generate_line_chart,
+    'scatter': generate_scatter_chart
+}
 
-# 路由2：柱状图页面
+# === 网站主页面 ===
+@app.route('/')
+def main_index():
+    return render_template('main_index.html')
+
+# === 图表工具主页 ===
+@app.route('/charts')
+def charts_index():
+    return render_template('index_graphic.html')
+
+# === 各图表页面 ===
 @app.route('/bar-chart')
 def bar_chart():
     return render_template('bar_chart.html')
 
-# 路由3：处理图表生成请求
+@app.route('/pie-chart')
+def pie_chart():
+    return render_template('pie_chart.html')
+
+@app.route('/line-chart')
+def line_chart():
+    return render_template('line_chart.html')
+
+@app.route('/scatter-chart')
+def scatter_chart():
+    return render_template('scatter_chart.html')
+
+# === API：生成图表 ===
 @app.route('/api/chart', methods=['POST'])
 def chart_api():
     try:
         data = request.get_json()
+        chart_type = data.get('type', 'bar')
         
-        # 提取所有参数，提供默认值
-        chart_config = {
-            'type': data.get('type', 'bar'),
-            'title': data.get('title', '柱状图'),
-            'data': data.get('data', [10, 20, 15, 30, 25]),
-            'x_label': data.get('x_label'),
-            'y_label': data.get('y_label'),
-            'x_ticks': data.get('x_ticks'),
-            'bar_color': data.get('bar_color', '#667eea'),
-            'edge_color': data.get('edge_color', '#5a6fd6'),
-            'background_color': data.get('background_color', '#ffffff'),
-            'bar_width': data.get('bar_width', 0.6),
-            'font_size': data.get('font_size', 12),
-            'title_font_size': data.get('title_font_size', 16),
-            'fig_width': data.get('fig_width', 10),
-            'fig_height': data.get('fig_height', 6),
-            'show_grid': data.get('show_grid', True),
-            'show_values': data.get('show_values', True),
-            'custom_colors': data.get('custom_colors')
-        }
+        # 获取对应的生成器
+        generator = GENERATORS.get(chart_type)
+        if not generator:
+            return jsonify({
+                'success': False, 
+                'error': f'不支持的图表类型: {chart_type}'
+            }), 400
         
-        # 调用核心程序
-        image_base64 = generate_chart(chart_config)
+        # 调用对应的生成器
+        image_base64 = generator(data)
         
         return jsonify({
             'success': True,
@@ -55,16 +73,25 @@ def chart_api():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
-# 路由4：处理图表下载
+# === API：下载图表 ===
 @app.route('/api/download', methods=['POST'])
 def download_chart():
     try:
         data = request.get_json()
         file_format = data.get('format', 'png')
         filename = data.get('filename', 'chart')
+        chart_type = data.get('type', 'bar')
         
-        # 重新生成图表（使用相同的配置）
-        image_base64 = generate_chart(data)
+        # 获取对应的生成器
+        generator = GENERATORS.get(chart_type)
+        if not generator:
+            return jsonify({
+                'success': False, 
+                'error': f'不支持的图表类型: {chart_type}'
+            }), 400
+        
+        # 重新生成图表
+        image_base64 = generator(data)
         
         if ',' in image_base64:
             image_base64 = image_base64.split(',')[1]

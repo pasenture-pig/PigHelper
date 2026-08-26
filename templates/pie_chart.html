@@ -1,0 +1,267 @@
+{% extends "chart_base.html" %}
+
+{% block title %}饼图生成器 - 猪咪小帮手{% endblock %}
+
+{% block chart_title %}🥧 饼图生成器{% endblock %}
+
+{% block chart_subtitle %}直观展示数据的组成和比例关系{% endblock %}
+
+{% block basic_settings %}
+<div class="form-group">
+    <label for="chartTitle">图表标题</label>
+    <input type="text" id="chartTitle" value="饼图示例" placeholder="输入图表标题">
+</div>
+
+<div class="form-group">
+    <label for="chartData">数据（用逗号分隔）</label>
+    <input type="text" id="chartData" value="30,25,20,15,10" placeholder="例如: 30,25,20,15,10">
+    <div class="help-text">输入数字，用英文逗号分隔</div>
+</div>
+
+<div class="form-group">
+    <label for="pieLabels">扇形标签 <span class="optional">(选填，用逗号分隔)</span></label>
+    <input type="text" id="pieLabels" placeholder="例如: 产品A,产品B,产品C,产品D,产品E" value="产品A,产品B,产品C,产品D,产品E">
+    <div class="help-text">自定义每个扇形的名称，数量应与数据数量一致</div>
+</div>
+{% endblock %}
+
+{% block advanced_settings %}
+<div class="row-3">
+    <div class="form-group">
+        <label>主色调</label>
+        <div class="color-picker-group">
+            <input type="color" id="pieColor1" value="#FF6B6B">
+            <span class="color-label">色1</span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>辅助色</label>
+        <div class="color-picker-group">
+            <input type="color" id="pieColor2" value="#4ECDC4">
+            <span class="color-label">色2</span>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>背景颜色</label>
+        <div class="color-picker-group">
+            <input type="color" id="bgColor" value="#ffffff">
+            <span class="color-label">背景色</span>
+        </div>
+    </div>
+</div>
+
+<div class="row-3">
+    <div class="form-group">
+        <label for="explode">扇形分离 <span class="optional">(0-0.5)</span></label>
+        <input type="text" id="explode" placeholder="例如: 0.1,0,0,0,0" value="0.1,0,0,0,0">
+        <div class="help-text">用逗号分隔，数量与数据一致</div>
+    </div>
+    <div class="form-group">
+        <label for="startAngle">起始角度 <span class="optional">(度)</span></label>
+        <input type="number" id="startAngle" value="90" min="0" max="360" step="15">
+        <div class="help-text">0°从右侧开始，90°从顶部开始</div>
+    </div>
+    <div class="form-group">
+        <label for="fontSize">字体大小 <span class="optional">(8-20)</span></label>
+        <input type="number" id="fontSize" value="12" min="8" max="20" step="1">
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <label for="titleFontSize">标题字体大小 <span class="optional">(10-30)</span></label>
+        <input type="number" id="titleFontSize" value="16" min="10" max="30" step="1">
+    </div>
+    <div class="form-group">
+        <label>图片尺寸 <span class="optional">(英寸)</span></label>
+        <div class="row" style="gap: 10px;">
+            <input type="number" id="figWidth" value="10" min="4" max="20" step="0.5" placeholder="宽">
+            <input type="number" id="figHeight" value="8" min="4" max="20" step="0.5" placeholder="高">
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <div class="checkbox-group">
+            <input type="checkbox" id="showPercentage" checked>
+            <label for="showPercentage">显示百分比</label>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="checkbox-group">
+            <input type="checkbox" id="showValues" checked>
+            <label for="showValues">显示数值</label>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="form-group">
+        <div class="checkbox-group">
+            <input type="checkbox" id="showShadow" checked>
+            <label for="showShadow">显示阴影</label>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="checkbox-group">
+            <input type="checkbox" id="showLegend" checked>
+            <label for="showLegend">显示图例</label>
+        </div>
+    </div>
+</div>
+
+<div class="form-group">
+    <label for="customColors">自定义颜色列表 <span class="optional">(选填，用逗号分隔十六进制颜色)</span></label>
+    <input type="text" id="customColors" placeholder="例如: #FF6B6B,#4ECDC4,#45B7D1,#FFA07A,#98D8C8">
+    <div class="help-text">为每个扇形单独设置颜色，数量应与数据数量一致</div>
+</div>
+{% endblock %}
+
+{% block generate_button_text %}🥧 生成饼图{% endblock %}
+
+{% block loading_text %}正在生成饼图...{% endblock %}
+
+{% block hint_text %}💡 提示：饼图适合展示数据的组成比例，数据总和为100%效果最佳{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+    // 饼图特定的DOM元素
+    const chartTitle = document.getElementById('chartTitle');
+    const chartData = document.getElementById('chartData');
+    const pieLabels = document.getElementById('pieLabels');
+    const pieColor1 = document.getElementById('pieColor1');
+    const pieColor2 = document.getElementById('pieColor2');
+    const bgColor = document.getElementById('bgColor');
+    const explode = document.getElementById('explode');
+    const startAngle = document.getElementById('startAngle');
+    const fontSize = document.getElementById('fontSize');
+    const titleFontSize = document.getElementById('titleFontSize');
+    const figWidth = document.getElementById('figWidth');
+    const figHeight = document.getElementById('figHeight');
+    const showPercentage = document.getElementById('showPercentage');
+    const showValues = document.getElementById('showValues');
+    const showShadow = document.getElementById('showShadow');
+    const showLegend = document.getElementById('showLegend');
+    const customColors = document.getElementById('customColors');
+
+    // 覆盖 buildConfig 函数
+    function buildConfig() {
+        const dataStr = chartData.value.trim();
+        const data = parseData(dataStr);
+
+        if (data.length === 0) {
+            showError('请输入有效的数字数据，用逗号分隔');
+            return null;
+        }
+
+        // 收集标签
+        let labels = null;
+        if (pieLabels.value.trim()) {
+            labels = parseStringList(pieLabels.value);
+            if (labels.length !== data.length) {
+                showError(`标签数量(${labels.length})与数据数量(${data.length})不一致`);
+                return null;
+            }
+        }
+
+        // 收集自定义颜色
+        let customColorsList = null;
+        if (customColors.value.trim()) {
+            customColorsList = parseStringList(customColors.value);
+            if (customColorsList.length !== data.length) {
+                showError(`自定义颜色数量(${customColorsList.length})与数据数量(${data.length})不一致`);
+                return null;
+            }
+        }
+
+        // 收集扇形分离参数
+        let explodeList = null;
+        if (explode.value.trim()) {
+            explodeList = parseData(explode.value);
+            if (explodeList.length !== data.length) {
+                showError(`扇形分离参数数量(${explodeList.length})与数据数量(${data.length})不一致`);
+                return null;
+            }
+            // 限制范围在 0-0.5
+            explodeList = explodeList.map(v => Math.max(0, Math.min(0.5, v)));
+        }
+
+        // 构建颜色方案
+        let colors = null;
+        if (!customColorsList) {
+            // 使用两个主色生成渐变色
+            const c1 = pieColor1.value;
+            const c2 = pieColor2.value;
+            // 如果数据量大于2，生成渐变色
+            if (data.length > 2) {
+                colors = generateGradientColors(c1, c2, data.length);
+            } else {
+                colors = [c1, c2];
+            }
+        }
+
+        return {
+            type: 'pie',
+            title: chartTitle.value.trim() || '饼图',
+            data: data,
+            labels: labels,
+            colors: customColorsList || colors,
+            explode: explodeList,
+            start_angle: parseInt(startAngle.value) || 90,
+            font_size: parseInt(fontSize.value) || 12,
+            title_font_size: parseInt(titleFontSize.value) || 16,
+            fig_width: parseFloat(figWidth.value) || 10,
+            fig_height: parseFloat(figHeight.value) || 8,
+            background_color: bgColor.value,
+            show_percentage: showPercentage.checked,
+            show_values: showValues.checked,
+            shadow: showShadow.checked,
+            show_legend: showLegend.checked
+        };
+    }
+
+    // 生成渐变色
+    function generateGradientColors(color1, color2, count) {
+        const colors = [];
+        const c1 = hexToRgb(color1);
+        const c2 = hexToRgb(color2);
+        for (let i = 0; i < count; i++) {
+            const ratio = count > 1 ? i / (count - 1) : 0;
+            const r = Math.round(c1.r + (c2.r - c1.r) * ratio);
+            const g = Math.round(c1.g + (c2.g - c1.g) * ratio);
+            const b = Math.round(c1.b + (c2.b - c1.b) * ratio);
+            colors.push(rgbToHex(r, g, b));
+        }
+        return colors;
+    }
+
+    // 十六进制转RGB
+    function hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : { r: 0, g: 0, b: 0 };
+    }
+
+    // RGB转十六进制
+    function rgbToHex(r, g, b) {
+        return '#' + [r, g, b].map(x => {
+            const hex = x.toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        }).join('');
+    }
+
+    // 回车键生成
+    chartData.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            generateBtn.click();
+        }
+    });
+
+    console.log('🥧 饼图生成器已加载');
+</script>
+{% endblock %}

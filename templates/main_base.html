@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}🐖猪咪小帮手🐖{% endblock %}</title>
+    
+    <!-- 全局样式 -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        /* 顶部导航栏 */
+        .top-nav {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            padding: 12px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 3px solid #f59e0b;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .nav-brand {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.3s;
+        }
+        
+        .nav-brand:hover {
+            transform: scale(1.05);
+        }
+        
+        .nav-brand .pig-emoji {
+            font-size: 32px;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .nav-link {
+            padding: 8px 18px;
+            border-radius: 20px;
+            text-decoration: none;
+            color: #666;
+            font-weight: 500;
+            transition: all 0.3s;
+            font-size: 14px;
+            border: 2px solid transparent;
+        }
+        
+        .nav-link:hover {
+            background: #f0f0f0;
+            color: #333;
+            transform: translateY(-2px);
+        }
+        
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .nav-link.active:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .nav-link .badge {
+            background: #f59e0b;
+            color: white;
+            padding: 1px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            margin-left: 5px;
+        }
+        
+        .nav-link .badge.planning {
+            background: #9ca3af;
+        }
+        
+        .nav-link.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .nav-link.disabled:hover {
+            transform: none;
+            background: transparent;
+        }
+        
+        /* 主要内容区域 */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: calc(100vh - 80px);
+        }
+        
+        /* 底部信息 */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+            background: rgba(0,0,0,0.1);
+            margin-top: 40px;
+        }
+        
+        .footer a {
+            color: white;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .nav-brand {
+                justify-content: center;
+                font-size: 24px;
+            }
+            
+            .nav-links {
+                justify-content: center;
+            }
+            
+            .nav-link {
+                font-size: 13px;
+                padding: 6px 14px;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <span class="pig-emoji">🐖</span>
+                猪咪小帮手🐖
+            </a>
+            <div class="nav-links">
+                <a href="/" class="nav-link {% block nav_home %}{% endblock %}">
+                    🏠 首页
+                </a>
+                <a href="/charts" class="nav-link {% block nav_charts %}{% endblock %}">
+                    📊 图表工具
+                    <span class="badge">热门</span>
+                </a>
+                <a href="#" class="nav-link disabled" onclick="return false;">
+                    🔍 数据提取
+                    <span class="badge planning">规划中</span>
+                </a>
+                <a href="#" class="nav-link disabled" onclick="return false;">
+                    📐 公式转化
+                    <span class="badge planning">规划中</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 主要内容 -->
+    <div class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+    
+    <!-- 底部 -->
+    <div class="footer">
+        <p>🐖 猪咪小帮手 - 猪猪！？</p>
+        <p style="font-size: 12px; margin-top: 5px; opacity: 0.7;">
+            @2026 pasenture-pig 可以访问我的GitHub
+        </p>
+    </div>
+    
+    <!-- 全局脚本 -->
+    <script>
+        // 全局工具函数
+        function showToast(message, type = 'info') {
+            console.log(`[${type}] ${message}`);
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🐖 猪咪小帮手已加载完成！');
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

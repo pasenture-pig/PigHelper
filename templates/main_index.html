@@ -1,0 +1,273 @@
+{% extends "main_base.html" %}
+
+{% block title %}🐖猪咪小帮手🐖 - 首页{% endblock %}
+
+{% block nav_home %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        text-align: center;
+        padding: 50px 20px 40px;
+        background: white;
+        border-radius: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    
+    .hero-section .big-icon {
+        font-size: 80px;
+        display: block;
+        margin-bottom: 20px;
+        animation: bounce 2s infinite;
+    }
+    
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .hero-section h1 {
+        font-size: 40px;
+        color: #333;
+        margin-bottom: 15px;
+    }
+    
+    .hero-section h1 .highlight {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .hero-section p {
+        color: #888;
+        font-size: 18px;
+        max-width: 600px;
+        margin: 0 auto 25px;
+        line-height: 1.8;
+    }
+    
+    .quick-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .quick-btn {
+        padding: 12px 30px;
+        border: none;
+        border-radius: 30px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .quick-btn.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .quick-btn.primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    }
+    
+    .quick-btn.secondary {
+        background: #f0f0f0;
+        color: #666;
+    }
+    
+    .quick-btn.secondary:hover {
+        background: #e0e0e0;
+        transform: translateY(-3px);
+    }
+    
+    .quick-btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .quick-btn.disabled:hover {
+        transform: none;
+        background: #f0f0f0;
+    }
+    
+    .features-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 25px;
+        margin-top: 30px;
+    }
+    
+    .feature-card {
+        background: white;
+        border-radius: 16px;
+        padding: 30px 25px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        transition: all 0.3s;
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transform: scaleX(0);
+        transition: transform 0.3s;
+    }
+    
+    .feature-card:hover:not(.disabled)::before {
+        transform: scaleX(1);
+    }
+    
+    .feature-card:hover:not(.disabled) {
+        border-color: #667eea;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    .feature-card.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .feature-card.disabled:hover {
+        transform: none;
+        border-color: transparent;
+    }
+    
+    .feature-card .icon {
+        font-size: 40px;
+        display: block;
+        margin-bottom: 15px;
+    }
+    
+    .feature-card h3 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 18px;
+    }
+    
+    .feature-card p {
+        color: #888;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    
+    .feature-card .status-badge {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 3px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .status-badge.ready {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .status-badge.coming {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .status-badge.planning {
+        background: #e5e7eb;
+        color: #6b7280;
+    }
+    
+    .feature-card .coming-tag {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #f59e0b;
+        color: white;
+        padding: 2px 12px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    
+    .feature-card .planning-tag {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #9ca3af;
+        color: white;
+        padding: 2px 12px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    
+    @media (max-width: 768px) {
+        .hero-section h1 {
+            font-size: 30px;
+        }
+        
+        .hero-section .big-icon {
+            font-size: 60px;
+        }
+        
+        .features-section {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <span class="big-icon">🐖</span>
+    <h1>欢迎来到 <span class="highlight">猪咪小帮手</span></h1>
+    <p>🐷 你的贴心小助手，让生活更简单！这里汇聚了各种实用小工具，帮你提高效率、解决问题。</p>
+    <div class="quick-actions">
+        <a href="/charts" class="quick-btn primary">📊 开始使用图表工具</a>
+        <a href="#" class="quick-btn secondary disabled" onclick="return false;">📝 更多工具即将上线</a>
+    </div>
+</div>
+
+<div class="features-section">
+    <!-- 图表生成器  -->
+    <a href="/charts" class="feature-card" style="text-decoration:none;">
+        <span class="icon">📊</span>
+        <h3>图表生成器</h3>
+        <p>轻松创建专业图表，支持柱状图、折线图等多种类型</p>
+        <span class="status-badge ready">✅ 已上线</span>
+    </a>
+    
+    <!-- 数据提取 - 开发中 -->
+    <div class="feature-card disabled">
+        <span class="planning-tag">规划中</span>
+        <span class="icon">🔍</span>
+        <h3>数据提取</h3>
+        <p>从图片、PDF、网页中智能提取结构化数据</p>
+        <span class="status-badge planning">📋 规划中</span>
+    </div>
+    
+    <!-- 公式转化 - 开发中 -->
+    <div class="feature-card disabled">
+        <span class="planning-tag">规划中</span>
+        <span class="icon">📐</span>
+        <h3>公式转化</h3>
+        <p>图片公式转LaTeX、数学表达式识别与计算</p>
+        <span class="status-badge planning">📋 规划中</span>
+    </div>
+</div>
+{% endblock %}

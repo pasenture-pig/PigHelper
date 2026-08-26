@@ -1,19 +1,26 @@
-{% extends "base.html" %}
+{% extends "main_base.html" %}
 
 {% block extra_css %}
 {{ super() }}
 <style>
-    /* 图表页面通用样式 */
+    /* 图表功能通用样式 */
+    .content-card {
+        background: white;
+        border-radius: 20px;
+        padding: 35px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    
     .back-to-home {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 10px 20px;
+        padding: 8px 16px;
         background: #f0f0f0;
         border: none;
-        border-radius: 8px;
+        border-radius: 20px;
         color: #666;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 500;
         cursor: pointer;
         transition: all 0.3s;
@@ -31,8 +38,9 @@
     }
     
     .page-header h1 {
-        margin-bottom: 5px;
         color: #333;
+        font-size: 28px;
+        margin-bottom: 5px;
     }
     
     .page-header .subtitle {
@@ -361,32 +369,35 @@
         .btn {
             min-width: auto;
         }
+        
+        .content-card {
+            padding: 20px;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- 返回首页按钮 -->
-<a href="/" class="back-to-home">← 返回首页</a>
-
-<!-- 页面标题 -->
-<div class="page-header">
-    <h1>{% block chart_title %}图表生成器{% endblock %}</h1>
-    <p class="subtitle">{% block chart_subtitle %}精细控制你的图表每一个细节{% endblock %}</p>
-</div>
-
-<!-- 基础设置 -->
-<div class="form-section">
-    <div class="form-section-title">
-        {% block basic_section_title %}📝 基础设置{% endblock %}
-        <span class="badge">必填</span>
+<div class="content-card">
+    <a href="/charts" class="back-to-home">← 返回图表工具</a>
+    
+    <div class="page-header">
+        <h1>{% block chart_title %}图表生成器{% endblock %}</h1>
+        <p class="subtitle">{% block chart_subtitle %}精细控制你的图表每一个细节{% endblock %}</p>
     </div>
     
-    {% block basic_settings %}
-    <!-- 由子模板实现 -->
-    {% endblock %}
-</div>
-
+    <!-- 基础设置 -->
+    <div class="form-section">
+        <div class="form-section-title">
+            {% block basic_section_title %}📝 基础设置{% endblock %}
+            <span class="badge">必填</span>
+        </div>
+        
+        {% block basic_settings %}
+        <!-- 由子模板实现 -->
+        {% endblock %}
+    </div>
+    
 <!-- 高级选项 -->
 <div class="form-section">
     <div class="form-section-title">
@@ -399,39 +410,69 @@
         {% block advanced_settings %}
         <!-- 由子模板实现 -->
         {% endblock %}
+        
+        <!-- 轴范围控制 - 由子模板决定是否显示 -->
+        {% block axis_range %}
+        <div class="form-section" style="margin-top: 15px; background: #f8f9fa; border-radius: 12px; padding: 15px; border: 1px solid #e9ecef;">
+            <div class="form-section-title" style="margin-bottom: 10px; font-size: 14px;">
+                📏 轴范围控制 <span class="badge optional" style="font-size: 11px;">选填</span>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="xMin">X轴最小值</label>
+                    <input type="number" id="xMin" placeholder="自动" step="any">
+                </div>
+                <div class="form-group">
+                    <label for="xMax">X轴最大值</label>
+                    <input type="number" id="xMax" placeholder="自动" step="any">
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="yMin">Y轴最小值</label>
+                    <input type="number" id="yMin" placeholder="自动" step="any">
+                </div>
+                <div class="form-group">
+                    <label for="yMax">Y轴最大值</label>
+                    <input type="number" id="yMax" placeholder="自动" step="any">
+                </div>
+            </div>
+            <div class="help-text" style="margin-top: 5px;">💡 留空则自动计算最佳范围</div>
+        </div>
+        {% endblock %}
     </div>
 </div>
-
-<!-- 按钮组 -->
-<div class="button-group">
-    <button class="btn btn-primary" id="generateBtn">{% block generate_button_text %}🚀 生成图表{% endblock %}</button>
-    <button class="btn btn-success" id="downloadBtn" disabled>💾 下载图表</button>
-</div>
-
-<div class="download-options" id="downloadOptions">
-    <select class="format-select" id="formatSelect">
-        <option value="png">PNG</option>
-        <option value="jpg">JPG</option>
-        <option value="pdf">PDF</option>
-    </select>
-    <input type="text" class="format-select" id="filenameInput" placeholder="文件名" value="chart">
-    <button class="btn btn-warning" id="downloadWithOptionsBtn" disabled>⬇️ 下载</button>
-</div>
-
-<div class="loading" id="loading">
-    <div class="spinner"></div>
-    <p style="margin-top: 15px; color: #666;">{% block loading_text %}正在生成图表...{% endblock %}</p>
-</div>
-
-<div class="error" id="errorMsg"></div>
-<div class="success" id="successMsg"></div>
-
-<div class="chart-container" id="chartContainer">
-    <img id="chartImage" alt="生成的图表">
-</div>
-
-<div class="hint-text" id="hintText">
-    {% block hint_text %}💡 提示：填写基础信息后点击"生成图表"，高级选项可定制更多细节{% endblock %}
+    <!-- 按钮组 -->
+    <div class="button-group">
+        <button class="btn btn-primary" id="generateBtn">{% block generate_button_text %}🚀 生成图表{% endblock %}</button>
+        <button class="btn btn-success" id="downloadBtn" disabled>💾 下载图表</button>
+    </div>
+    
+    <div class="download-options" id="downloadOptions">
+        <select class="format-select" id="formatSelect">
+            <option value="png">PNG</option>
+            <option value="jpg">JPG</option>
+            <option value="pdf">PDF</option>
+        </select>
+        <input type="text" class="format-select" id="filenameInput" placeholder="文件名" value="chart">
+        <button class="btn btn-warning" id="downloadWithOptionsBtn" disabled>⬇️ 下载</button>
+    </div>
+    
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p style="margin-top: 15px; color: #666;">{% block loading_text %}正在生成图表...{% endblock %}</p>
+    </div>
+    
+    <div class="error" id="errorMsg"></div>
+    <div class="success" id="successMsg"></div>
+    
+    <div class="chart-container" id="chartContainer">
+        <img id="chartImage" alt="生成的图表">
+    </div>
+    
+    <div class="hint-text" id="hintText">
+        {% block hint_text %}💡 提示：填写基础信息后点击"生成图表"，高级选项可定制更多细节{% endblock %}
+    </div>
 </div>
 {% endblock %}
 
@@ -439,14 +480,10 @@
 {{ super() }}
 <script>
     // 图表通用JavaScript
-    // 这些变量和方法会被子模板继承和覆盖
-    
-    // 状态变量
     let currentChartBase64 = null;
     let currentConfig = null;
     let isGenerating = false;
     
-    // DOM元素（通用）
     const generateBtn = document.getElementById('generateBtn');
     const downloadBtn = document.getElementById('downloadBtn');
     const downloadOptions = document.getElementById('downloadOptions');
@@ -462,7 +499,6 @@
     const advancedToggle = document.getElementById('advancedToggle');
     const advancedContent = document.getElementById('advancedContent');
     
-    // 高级选项展开/折叠
     let advancedOpen = false;
     if (advancedToggle && advancedContent) {
         advancedToggle.addEventListener('click', () => {
@@ -472,24 +508,19 @@
         });
     }
     
-    // 构建配置（由子模板覆盖）
     function buildConfig() {
-        // 子模板应该实现这个函数
         console.warn('buildConfig() 应该在子模板中实现');
-        return {};
+        return null;
     }
     
-    // 生成图表
     generateBtn.addEventListener('click', async () => {
         if (isGenerating) return;
         
-        // 构建配置
         const config = buildConfig();
         if (!config) return;
         
         currentConfig = config;
         
-        // 显示加载状态
         isGenerating = true;
         generateBtn.disabled = true;
         loading.classList.add('active');
@@ -534,7 +565,6 @@
         }
     });
     
-    // 下载图表
     downloadWithOptionsBtn.addEventListener('click', async () => {
         if (!currentChartBase64 || !currentConfig) {
             showError('请先生成图表');
@@ -586,13 +616,11 @@
         }
     });
     
-    // 快捷下载
     downloadBtn.addEventListener('click', () => {
         formatSelect.value = 'png';
         downloadWithOptionsBtn.click();
     });
     
-    // 辅助函数
     function showError(msg) {
         errorMsg.textContent = '❌ ' + msg;
         errorMsg.style.display = 'block';
@@ -610,12 +638,10 @@
         successMsg.style.display = 'none';
     }
     
-    // 工具函数：解析逗号分隔的数据
     function parseData(str) {
         return str.split(',').map(s => parseFloat(s.trim())).filter(v => !isNaN(v));
     }
     
-    // 工具函数：解析逗号分隔的字符串列表
     function parseStringList(str) {
         return str.split(',').map(s => s.trim()).filter(s => s);
     }
