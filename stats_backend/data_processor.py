@@ -165,9 +165,18 @@ class DataProcessor:
                 except:
                     pass
         return None
-    
+
     def extract_data(self, mode='row', index=0, start_row=0, start_col=0, allow_non_numeric=False):
-        """提取数据"""
+        """
+        提取数据
+        
+        参数:
+            mode: 'row', 'col', 'all'
+            index: 行或列的索引（0=表头/行索引）
+            allow_non_numeric: 是否允许非数值数据
+            start_row: 起始行
+            start_col: 起始列
+        """
         if self.df is None or self.df.empty:
             return {'success': False, 'error': '没有数据'}
         
@@ -200,6 +209,7 @@ class DataProcessor:
             raw_values = []
             numeric_values = []
             non_numeric_found = False
+            non_numeric_examples = []
             
             for val in row_series:
                 raw_values.append(str(val))
@@ -208,25 +218,35 @@ class DataProcessor:
                     numeric_values.append(num)
                 else:
                     non_numeric_found = True
+                    if len(non_numeric_examples) < 3:
+                        non_numeric_examples.append(str(val))
             
-            if not allow_non_numeric and non_numeric_found:
+            # 不允许非数值数据
+            if not allow_non_numeric:
+                if non_numeric_found and not numeric_values:
+                    examples = ', '.join(non_numeric_examples)
+                    return {'success': False, 'error': f'行 {index} 从第 {start_col} 列开始全部为非数值，请开启"允许非数值数据"\n非数值示例: {examples}'}
+                
+                if non_numeric_found and numeric_values:
+                    return {
+                        'success': True,
+                        'values': numeric_values,
+                        'raw_data': [raw_values],
+                        'header_data': self.df.columns.tolist()[start_col:],
+                        'label': f'行{index}',
+                        'source_label': f'行 {index} (从列 {start_col} 开始) [已忽略非数值]',
+                        'mode': 'row',
+                        'index': index,
+                        'count': len(numeric_values),
+                        'has_non_numeric': False,
+                        'is_header': False,
+                        'non_numeric_ignored': True
+                    }
+                
                 if not numeric_values:
-                    return {'success': False, 'error': f'行 {index} 从第 {start_col} 列开始没有数值数据，请开启"允许非数值数据"'}
-                return {
-                    'success': True,
-                    'values': numeric_values,
-                    'raw_data': [raw_values],
-                    'header_data': self.df.columns.tolist()[start_col:],
-                    'label': f'行{index}',
-                    'source_label': f'行 {index} (从列 {start_col} 开始) [仅数值]',
-                    'mode': 'row',
-                    'index': index,
-                    'count': len(numeric_values),
-                    'has_non_numeric': False,
-                    'is_header': False,
-                    'non_numeric_ignored': True
-                }
+                    return {'success': False, 'error': f'行 {index} 从第 {start_col} 列开始没有数值数据'}
             
+            # 允许非数值数据
             if allow_non_numeric:
                 return {
                     'success': True,
@@ -241,9 +261,6 @@ class DataProcessor:
                     'has_non_numeric': True,
                     'is_header': False
                 }
-            
-            if not numeric_values:
-                return {'success': False, 'error': f'行 {index} 从第 {start_col} 列开始没有数值数据，请开启"允许非数值数据"'}
             
             return {
                 'success': True,
@@ -287,6 +304,7 @@ class DataProcessor:
             raw_values = []
             numeric_values = []
             non_numeric_found = False
+            non_numeric_examples = []
             
             for val in col_data:
                 raw_values.append(str(val))
@@ -295,24 +313,32 @@ class DataProcessor:
                     numeric_values.append(num)
                 else:
                     non_numeric_found = True
+                    if len(non_numeric_examples) < 3:
+                        non_numeric_examples.append(str(val))
             
-            if not allow_non_numeric and non_numeric_found:
+            if not allow_non_numeric:
+                if non_numeric_found and not numeric_values:
+                    examples = ', '.join(non_numeric_examples)
+                    return {'success': False, 'error': f'列 "{col_name}" 从第 {start_row} 行开始全部为非数值，请开启"允许非数值数据"\n非数值示例: {examples}'}
+                
+                if non_numeric_found and numeric_values:
+                    return {
+                        'success': True,
+                        'values': numeric_values,
+                        'raw_data': [raw_values],
+                        'header_data': [col_name],
+                        'label': col_name,
+                        'source_label': f'列 "{col_name}" (从行 {start_row} 开始) [已忽略非数值]',
+                        'mode': 'col',
+                        'index': index,
+                        'count': len(numeric_values),
+                        'has_non_numeric': False,
+                        'is_header': False,
+                        'non_numeric_ignored': True
+                    }
+                
                 if not numeric_values:
-                    return {'success': False, 'error': f'列 "{col_name}" 从第 {start_row} 行开始没有数值数据，请开启"允许非数值数据"'}
-                return {
-                    'success': True,
-                    'values': numeric_values,
-                    'raw_data': [raw_values],
-                    'header_data': [col_name],
-                    'label': col_name,
-                    'source_label': f'列 "{col_name}" (从行 {start_row} 开始) [仅数值]',
-                    'mode': 'col',
-                    'index': index,
-                    'count': len(numeric_values),
-                    'has_non_numeric': False,
-                    'is_header': False,
-                    'non_numeric_ignored': True
-                }
+                    return {'success': False, 'error': f'列 "{col_name}" 从第 {start_row} 行开始没有数值数据'}
             
             if allow_non_numeric:
                 return {
@@ -328,9 +354,6 @@ class DataProcessor:
                     'has_non_numeric': True,
                     'is_header': False
                 }
-            
-            if not numeric_values:
-                return {'success': False, 'error': f'列 "{col_name}" 从第 {start_row} 行开始没有数值数据，请开启"允许非数值数据"'}
             
             return {
                 'success': True,
@@ -353,6 +376,7 @@ class DataProcessor:
             if data_slice.empty:
                 return {'success': False, 'error': '指定位置没有数据'}
             
+            # ✅ 如果允许非数值数据
             if allow_non_numeric:
                 header_row = data_slice.columns.tolist()
                 raw_data = []
@@ -380,22 +404,38 @@ class DataProcessor:
                     'is_header': False
                 }
             
-            raw_data = []
+            # ✅ 不允许非数值数据：只提取数值列中的数值
+            # 先找出哪些列是数值列
+            numeric_cols = []
+            for col in data_slice.columns:
+                # 检查这一列是否全部是数值
+                col_data = data_slice[col]
+                all_numeric = True
+                for val in col_data:
+                    if self._safe_float(val) is None:
+                        all_numeric = False
+                        break
+                if all_numeric:
+                    numeric_cols.append(col)
+            
+            # 如果没有数值列
+            if not numeric_cols:
+                return {
+                    'success': False, 
+                    'error': f'从第 {start_row + 1} 行第 {start_col + 1} 列开始没有数值列，请开启"允许非数值数据"'
+                }
+            
+            # 只提取数值列的数据
             values = []
-            non_numeric_found = False
-            for idx, row in data_slice.iterrows():
+            raw_data = []
+            for idx, row in data_slice[numeric_cols].iterrows():
                 row_values = []
                 for val in row:
                     row_values.append(val)
                     num = self._safe_float(val)
                     if num is not None:
                         values.append(num)
-                    else:
-                        non_numeric_found = True
                 raw_data.append(row_values)
-            
-            if not values and non_numeric_found:
-                return {'success': False, 'error': f'从第 {start_row + 1} 行第 {start_col + 1} 列开始没有数值数据，请开启"允许非数值数据"'}
             
             if not values:
                 return {'success': False, 'error': f'从第 {start_row + 1} 行第 {start_col + 1} 列开始没有数值数据'}
@@ -406,17 +446,16 @@ class DataProcessor:
                 'raw_data': raw_data,
                 'header_data': data_slice.columns.tolist(),
                 'label': '全部数据',
-                'source_label': f'全部数据 (行{start_row + 1}→, 列{start_col + 1}→)',
+                'source_label': f'全部数据 (行{start_row + 1}→, 列{start_col + 1}→) [仅数值列]',
                 'mode': 'all',
                 'index': 0,
                 'count': len(values),
                 'has_non_numeric': False,
                 'is_header': False,
-                'non_numeric_ignored': non_numeric_found
+                'non_numeric_ignored': True
             }
         
         return {'success': False, 'error': f'不支持的提取模式: {mode}'}
-    
     def transpose_data(self):
         """行列互换（转置）"""
         if self.df is None or self.df.empty:
