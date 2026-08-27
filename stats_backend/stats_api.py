@@ -109,7 +109,6 @@ def analyze_data():
         is_header = extracted.get('is_header', False)
         has_non_numeric = extracted.get('has_non_numeric', False)
         
-        # 如果是表头，直接返回，不计算统计
         if is_header:
             return jsonify({
                 'success': True,
@@ -129,7 +128,6 @@ def analyze_data():
                 'is_header': True
             })
         
-        # 如果包含非数值数据，不计算统计
         if has_non_numeric:
             return jsonify({
                 'success': True,
@@ -150,7 +148,6 @@ def analyze_data():
                 'is_header': False
             })
         
-        # 纯数值数据，计算统计
         stats = data_processor.calculate_stats(extracted['values'])
         if not stats:
             return jsonify({'success': False, 'error': '计算统计指标失败'})
@@ -197,3 +194,29 @@ def get_info():
         'cols': len(data_processor.df.columns),
         'headers': data_processor.headers
     })
+
+
+@stats_bp.route('/transpose', methods=['POST'])
+def transpose_data():
+    """行列互换"""
+    try:
+        if data_processor.df is None or data_processor.df.empty:
+            return jsonify({'success': False, 'error': '没有数据'})
+        
+        result = data_processor.transpose_data()
+        if not result.get('success'):
+            return jsonify({'success': False, 'error': result.get('error', '转置失败')})
+        
+        preview = data_processor.get_preview(start_row=0, max_rows=50)
+        return jsonify({
+            'success': True,
+            'message': result.get('message', '转置成功'),
+            'info': {
+                'rows': result.get('rows', 0),
+                'cols': result.get('cols', 0)
+            },
+            'preview': preview
+        })
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})

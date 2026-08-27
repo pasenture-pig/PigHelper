@@ -20,43 +20,52 @@
 
 <div class="row">
     <div class="form-group">
-        <label for="xLabel">X轴标签 <span class="optional">(选填)</span></label>
+        <label for="xLabel">X轴名称 <span class="optional">(选填)</span></label>
         <input type="text" id="xLabel" placeholder="例如: 时间" value="时间">
     </div>
     <div class="form-group">
-        <label for="yLabel">Y轴标签 <span class="optional">(选填)</span></label>
+        <label for="yLabel">Y轴名称 <span class="optional">(选填)</span></label>
         <input type="text" id="yLabel" placeholder="例如: 数值" value="数值">
     </div>
 </div>
 
-<!-- 数据系列管理 -->
-<div class="form-section" style="margin-top: 15px; background: #f0f4ff; border-radius: 12px; padding: 15px; border: 1px solid #c7d2fe;">
-    <div class="form-section-title" style="margin-bottom: 10px; font-size: 14px;">
-        📊 数据系列
-        <span class="badge" style="font-size: 11px;">必填</span>
-    </div>
-    
-    <div class="row" style="margin-bottom: 10px;">
-        <div class="form-group" style="margin-bottom: 0;">
-            <label for="seriesCount">系列数量</label>
-            <input type="number" id="seriesCount" value="2" min="1" max="5" step="1">
-        </div>
-        <div class="form-group" style="margin-bottom: 0;">
-            <label for="pointCount">数据点数</label>
-            <input type="number" id="pointCount" value="5" min="2" max="20" step="1">
-        </div>
-    </div>
-    <button class="btn btn-primary" id="updateSeriesBtn" style="padding: 8px 20px; font-size: 14px; flex: 0 1 auto; min-width: auto;">更新数据输入</button>
-    <div class="help-text" style="margin-top: 8px;">💡 修改系列数量或数据点数后点击"更新数据输入"</div>
+<!-- 系列名称输入 -->
+<div class="form-group">
+    <label for="seriesNamesInput">系列名称 <span class="optional">(选填，用逗号分隔)</span></label>
+    <input type="text" id="seriesNamesInput" placeholder="例如: 产品A,产品B,产品C" value="系列1,系列2,系列3">
+    <div class="help-text">数量应与系列数据数量一致</div>
 </div>
 
-<div id="seriesInputContainer">
-    <!-- 由 JavaScript 动态生成 -->
+<!-- 分号输入模式 -->
+<div class="form-section" style="margin-top: 15px; background: #f0f4ff; border-radius: 12px; padding: 15px; border: 1px solid #c7d2fe;">
+    <div class="form-section-title" style="margin-bottom: 10px; font-size: 14px;">
+        📊 数据输入
+        <span class="badge" style="font-size: 11px;">必填</span>
+        <span style="font-size: 12px; color: #888; font-weight: 400; margin-left: 5px;">每行用分号分隔，每列用逗号分隔</span>
+    </div>
+    
+    <div class="form-group" style="margin-bottom: 0;">
+        <label for="seriesDataInput">系列数据</label>
+        <textarea id="seriesDataInput" rows="4" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 13px;" placeholder="格式: 数据1,数据2,数据3; 数据1,数据2,数据3&#10;例如:&#10;10,20,15,30,25; 5,15,25,20,35; 15,10,20,25,30">10,20,15,30,25; 5,15,25,20,35; 15,10,20,25,30</textarea>
+        <div class="help-text">💡 用分号分隔系列，逗号分隔数据点</div>
+    </div>
+</div>
+
+<!-- 解析状态 -->
+<div style="display: flex; gap: 15px; margin-top: 8px; flex-wrap: wrap; align-items: center;">
+    <span style="font-size: 13px; color: #888;" id="lineParseStatus">📊 等待输入...</span>
+    <button class="btn-sm btn-sm-success" id="loadLineSampleBtn">📊 加载示例</button>
+</div>
+
+<!-- 解析结果预览 -->
+<div id="linePreview" style="display: none; margin-top: 10px; padding: 12px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+    <div style="font-size: 13px; color: #888; margin-bottom: 5px;">📋 解析结果</div>
+    <div id="lineResultDisplay" style="font-family: 'Consolas', monospace; font-size: 13px; color: #333; max-height: 120px; overflow-y: auto;"></div>
 </div>
 {% endblock %}
 
 {% block advanced_settings %}
-<!-- ✅ 颜色设置 - 每个系列单独设置 -->
+<!-- 颜色设置 -->
 <div class="form-section" style="margin-top: 15px; background: #f8f9fa; border-radius: 12px; padding: 15px; border: 1px solid #e9ecef;">
     <div class="form-section-title" style="margin-bottom: 10px; font-size: 14px;">
         🎨 系列颜色
@@ -65,7 +74,7 @@
     <div id="colorInputContainer">
         <!-- 由 JavaScript 动态生成 -->
     </div>
-    <div class="help-text" style="margin-top: 8px;">💡 每个系列可以单独设置颜色，留空使用默认颜色</div>
+    <div class="help-text" style="margin-top: 8px;">💡 每个系列可以单独设置颜色</div>
 </div>
 
 <div class="row-3">
@@ -184,7 +193,7 @@
 
 {% block loading_text %}正在生成折线图...{% endblock %}
 
-{% block hint_text %}💡 提示：支持多系列数据对比，每个系列可单独设置颜色{% endblock %}
+{% block hint_text %}💡 提示：使用分号分隔系列，逗号分隔数据点，每个系列可单独设置颜色{% endblock %}
 
 {% block extra_js %}
 {{ super() }}
@@ -194,10 +203,12 @@
     const xLabels = document.getElementById('xLabels');
     const xLabel = document.getElementById('xLabel');
     const yLabel = document.getElementById('yLabel');
-    const seriesCount = document.getElementById('seriesCount');
-    const pointCount = document.getElementById('pointCount');
-    const updateSeriesBtn = document.getElementById('updateSeriesBtn');
-    const seriesInputContainer = document.getElementById('seriesInputContainer');
+    const seriesNamesInput = document.getElementById('seriesNamesInput');
+    const seriesDataInput = document.getElementById('seriesDataInput');
+    const loadLineSampleBtn = document.getElementById('loadLineSampleBtn');
+    const lineParseStatus = document.getElementById('lineParseStatus');
+    const linePreview = document.getElementById('linePreview');
+    const lineResultDisplay = document.getElementById('lineResultDisplay');
     const colorInputContainer = document.getElementById('colorInputContainer');
     
     const bgColor = document.getElementById('bgColor');
@@ -217,95 +228,130 @@
     const yMin = document.getElementById('yMin');
     const yMax = document.getElementById('yMax');
 
-    // 默认颜色列表
-    const defaultColors = ['#667eea', '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A'];
+    let parsedLineData = null;
+    let parsedLineNames = [];
 
-    // 生成系列输入框和颜色输入框
-    function generateSeriesInputs() {
-        const nSeries = parseInt(seriesCount.value) || 2;
-        const nPoints = parseInt(pointCount.value) || 5;
+    // 默认颜色列表
+    const defaultColors = ['#667eea', '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#F7DC6F', '#BB8FCE', '#85C1E9'];
+
+    // 解析分号分隔的数据
+    function parseLineData(text) {
+        const parts = text.split(';').map(s => s.trim()).filter(s => s);
+        const data = [];
+        let cols = 0;
         
-        const clampedSeries = Math.max(1, Math.min(5, nSeries));
-        const clampedPoints = Math.max(2, Math.min(20, nPoints));
-        
-        if (clampedSeries !== nSeries) seriesCount.value = clampedSeries;
-        if (clampedPoints !== nPoints) pointCount.value = clampedPoints;
-        
-        // 生成数据输入框
-        let html = '';
-        for (let i = 0; i < clampedSeries; i++) {
-            const defaultData = Array.from({length: clampedPoints}, () => Math.floor(Math.random() * 30) + 5).join(',');
-            html += `
-                <div class="form-group" style="margin-bottom: 10px;">
-                    <label for="series_${i}">系列 ${i+1} 名称</label>
-                    <div class="row" style="gap: 10px;">
-                        <input type="text" id="series_name_${i}" class="series-name-input" value="系列${i+1}" placeholder="系列名称" style="flex: 1;">
-                        <input type="text" id="series_${i}" class="series-input" value="${defaultData}" placeholder="例如: 10,20,15,30,25" style="flex: 3;">
-                    </div>
-                    <div class="help-text">输入 ${clampedPoints} 个数字，用英文逗号分隔</div>
-                </div>
-            `;
+        for (const part of parts) {
+            const values = part.split(',').map(s => parseFloat(s.trim())).filter(v => !isNaN(v));
+            if (values.length > 0) {
+                if (cols === 0) cols = values.length;
+                if (values.length !== cols) {
+                    return { success: false, error: `系列 ${data.length + 1} 数据点数(${values.length})与第一系列(${cols})不一致` };
+                }
+                data.push(values);
+            }
         }
-        seriesInputContainer.innerHTML = html;
+        
+        if (data.length === 0) {
+            return { success: false, error: '没有有效数据' };
+        }
+        
+        return { success: true, data: data, series: data.length, points: cols };
+    }
+
+    function autoParseAndDisplay() {
+        const text = seriesDataInput.value.trim();
+        if (!text) {
+            lineParseStatus.textContent = '📊 等待输入...';
+            linePreview.style.display = 'none';
+            parsedLineData = null;
+            parsedLineNames = [];
+            return;
+        }
+        
+        const result = parseLineData(text);
+        if (!result.success) {
+            lineParseStatus.textContent = '❌ ' + result.error;
+            linePreview.style.display = 'none';
+            parsedLineData = null;
+            parsedLineNames = [];
+            return;
+        }
+        
+        parsedLineData = result.data;
+        
+        // 获取系列名称
+        const namesInput = seriesNamesInput.value.trim();
+        let names = [];
+        if (namesInput) {
+            names = namesInput.split(',').map(s => s.trim()).filter(s => s);
+            if (names.length !== result.series) {
+                lineParseStatus.textContent = `⚠️ 系列名称数量(${names.length})与系列数量(${result.series})不一致，使用默认名称`;
+                names = result.data.map((_, i) => `系列${i+1}`);
+            }
+        } else {
+            names = result.data.map((_, i) => `系列${i+1}`);
+        }
+        parsedLineNames = names;
+        
+        // 显示解析结果
+        let displayText = `✅ ${result.series} 个系列 × ${result.points} 个数据点\n`;
+        result.data.forEach((row, i) => {
+            displayText += `${names[i]}: [${row.join(', ')}]\n`;
+        });
+        lineResultDisplay.textContent = displayText;
+        linePreview.style.display = 'block';
+        lineParseStatus.textContent = `✅ 解析成功！${result.series} 个系列 × ${result.points} 个数据点`;
         
         // 生成颜色输入框
-        let colorHtml = '<div class="row">';
-        for (let i = 0; i < clampedSeries; i++) {
-            colorHtml += `
+        generateLineColors(names);
+    }
+
+    // 生成颜色输入框
+    function generateLineColors(names) {
+        let html = '<div class="row">';
+        names.forEach((name, i) => {
+            html += `
                 <div class="form-group" style="margin-bottom: 5px;">
-                    <label style="font-size: 13px;">系列${i+1}</label>
+                    <label style="font-size: 13px;">${name}</label>
                     <div class="color-picker-group">
                         <input type="color" id="series_color_${i}" value="${defaultColors[i % defaultColors.length]}">
                         <span class="color-label">颜色</span>
                     </div>
                 </div>
             `;
-        }
-        colorHtml += '</div>';
-        colorInputContainer.innerHTML = colorHtml;
+        });
+        html += '</div>';
+        colorInputContainer.innerHTML = html;
     }
 
-    // 更新系列输入
-    updateSeriesBtn.addEventListener('click', generateSeriesInputs);
-
-    // 初始化时生成
-    document.addEventListener('DOMContentLoaded', generateSeriesInputs);
+    // 加载示例数据
+    function loadLineSample() {
+        seriesDataInput.value = '10,20,15,30,25; 5,15,25,20,35; 15,10,20,25,30';
+        seriesNamesInput.value = '产品A,产品B,产品C';
+        autoParseAndDisplay();
+    }
 
     // 构建配置
     function buildConfig() {
-        const nSeries = parseInt(seriesCount.value) || 2;
-        const nPoints = parseInt(pointCount.value) || 5;
+        if (!parsedLineData || parsedLineData.length === 0) {
+            showError('请先输入并解析数据');
+            return null;
+        }
         
         const data = {};
         const colors = [];
-        let isValid = true;
+        const names = parsedLineNames;
         
-        for (let i = 0; i < nSeries; i++) {
-            const input = document.getElementById(`series_${i}`);
-            const nameInput = document.getElementById(`series_name_${i}`);
+        parsedLineData.forEach((values, i) => {
+            data[names[i] || `系列${i+1}`] = values;
             const colorInput = document.getElementById(`series_color_${i}`);
-            
-            if (!input) continue;
-            
-            const values = parseData(input.value);
-            if (values.length !== nPoints) {
-                showError(`系列 ${i+1} 数据数量(${values.length})与预期点数(${nPoints})不一致`);
-                isValid = false;
-                break;
-            }
-            
-            const name = nameInput ? nameInput.value.trim() || `系列${i+1}` : `系列${i+1}`;
-            data[name] = values;
-            
             if (colorInput) {
                 colors.push(colorInput.value);
             }
-        }
+        });
         
-        if (!isValid) return null;
-        
+        const nPoints = parsedLineData[0].length;
         const xLabelsList = parseStringList(xLabels.value) || null;
-        
         if (xLabelsList && xLabelsList.length !== nPoints) {
             showError(`X轴标签数量(${xLabelsList.length})与数据点数量(${nPoints})不一致`);
             return null;
@@ -338,13 +384,16 @@
         };
     }
 
-    // 回车键生成
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && (e.target.classList.contains('series-input') || e.target.classList.contains('series-name-input'))) {
-            generateBtn.click();
-        }
+    // 事件绑定 - 自动解析
+    seriesDataInput.addEventListener('input', autoParseAndDisplay);
+    seriesNamesInput.addEventListener('input', autoParseAndDisplay);
+    loadLineSampleBtn.addEventListener('click', loadLineSample);
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        loadLineSample();
     });
 
-    console.log('📈 折线图生成器已加载（支持多系列、自定义颜色和图例）');
+    console.log('📈 折线图生成器已加载（分号输入模式）');
 </script>
 {% endblock %}

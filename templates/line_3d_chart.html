@@ -19,9 +19,9 @@
 </div>
 
 <div class="form-group">
-    <label for="seriesNames">系列名称 <span class="optional">(选填，用逗号分隔)</span></label>
-    <input type="text" id="seriesNames" placeholder="例如: 产品A,产品B,产品C" value="系列1,系列2,系列3">
-    <div class="help-text">对应每行数据，数量应与行数一致</div>
+    <label for="seriesNames3d">系列名称 <span class="optional">(选填，用逗号分隔)</span></label>
+    <input type="text" id="seriesNames3d" placeholder="例如: 产品A,产品B,产品C" value="系列1,系列2,系列3">
+    <div class="help-text">数量应与系列数据数量一致</div>
 </div>
 
 <div class="row">
@@ -40,29 +40,31 @@
     <input type="text" id="zLabel" placeholder="例如: 数值" value="数值">
 </div>
 
-<!-- 数据系列管理 -->
+<!-- 分号输入模式 -->
 <div class="form-section" style="margin-top: 15px; background: #f0f4ff; border-radius: 12px; padding: 15px; border: 1px solid #c7d2fe;">
     <div class="form-section-title" style="margin-bottom: 10px; font-size: 14px;">
-        📊 数据系列
+        📊 数据输入
         <span class="badge" style="font-size: 11px;">必填</span>
+        <span style="font-size: 12px; color: #888; font-weight: 400; margin-left: 5px;">每行用分号分隔，每列用逗号分隔</span>
     </div>
     
-    <div class="row" style="margin-bottom: 10px;">
-        <div class="form-group" style="margin-bottom: 0;">
-            <label for="seriesCount3D">系列数量 (行数)</label>
-            <input type="number" id="seriesCount3D" value="3" min="1" max="10" step="1">
-        </div>
-        <div class="form-group" style="margin-bottom: 0;">
-            <label for="pointCount3D">数据点数 (列数)</label>
-            <input type="number" id="pointCount3D" value="5" min="2" max="20" step="1">
-        </div>
+    <div class="form-group" style="margin-bottom: 0;">
+        <label for="line3dDataInput">系列数据</label>
+        <textarea id="line3dDataInput" rows="4" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 13px;" placeholder="格式: 系列1数据; 系列2数据; 系列3数据&#10;例如:&#10;10,20,15,30,25; 5,15,25,20,35; 15,10,20,25,30">10,20,15,30,25; 5,15,25,20,35; 15,10,20,25,30</textarea>
+        <div class="help-text">💡 用分号分隔系列，逗号分隔数据点</div>
     </div>
-    <button class="btn btn-primary" id="updateSeries3DBtn" style="padding: 8px 20px; font-size: 14px; flex: 0 1 auto; min-width: auto;">更新数据输入</button>
-    <div class="help-text" style="margin-top: 8px;">💡 修改系列数量或数据点数后点击"更新数据输入"</div>
 </div>
 
-<div id="series3DInputContainer">
-    <!-- 由 JavaScript 动态生成 -->
+<!-- 解析状态和示例按钮 -->
+<div style="display: flex; gap: 15px; margin-top: 8px; flex-wrap: wrap; align-items: center;">
+    <span style="font-size: 13px; color: #888;" id="line3dParseStatus">📊 等待输入...</span>
+    <button class="btn-sm btn-sm-success" id="loadLine3dSampleBtn">📊 加载示例</button>
+</div>
+
+<!-- 解析结果预览 -->
+<div id="line3dPreview" style="display: none; margin-top: 10px; padding: 12px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+    <div style="font-size: 13px; color: #888; margin-bottom: 5px;">📋 解析结果</div>
+    <div id="line3dResultDisplay" style="font-family: 'Consolas', monospace; font-size: 13px; color: #333; max-height: 120px; overflow-y: auto;"></div>
 </div>
 {% endblock %}
 
@@ -91,53 +93,36 @@
     </div>
 </div>
 
-<div class="row-3">
+<div class="row">
     <div class="form-group">
-        <label>线条颜色4</label>
-        <div class="color-picker-group">
-            <input type="color" id="color4" value="#45B7D1">
-            <span class="color-label">色4</span>
-        </div>
-    </div>
-    <div class="form-group">
-        <label>线条颜色5</label>
-        <div class="color-picker-group">
-            <input type="color" id="color5" value="#FFA07A">
-            <span class="color-label">色5</span>
-        </div>
-    </div>
-    <div class="form-group">
-        <label>背景颜色</label>
+        <label for="bgColor">背景颜色</label>
         <div class="color-picker-group">
             <input type="color" id="bgColor" value="#ffffff">
             <span class="color-label">背景色</span>
         </div>
     </div>
-</div>
-
-<div class="row">
     <div class="form-group">
         <label for="lineWidth">线宽 <span class="optional">(1-5)</span></label>
         <input type="number" id="lineWidth" value="2.5" min="1" max="5" step="0.5">
     </div>
+</div>
+
+<div class="row">
     <div class="form-group">
         <label for="markerSize">标记大小 <span class="optional">(2-15)</span></label>
         <input type="number" id="markerSize" value="8" min="2" max="15" step="1">
     </div>
-</div>
-
-<div class="row">
     <div class="form-group">
         <label for="fontSize">字体大小 <span class="optional">(8-20)</span></label>
         <input type="number" id="fontSize" value="11" min="8" max="20" step="1">
     </div>
+</div>
+
+<div class="row">
     <div class="form-group">
         <label for="titleFontSize">标题字体大小 <span class="optional">(10-30)</span></label>
         <input type="number" id="titleFontSize" value="16" min="10" max="30" step="1">
     </div>
-</div>
-
-<div class="row">
     <div class="form-group">
         <label>图片尺寸 <span class="optional">(英寸)</span></label>
         <div class="row" style="gap: 10px;">
@@ -145,6 +130,9 @@
             <input type="number" id="figHeight" value="8" min="4" max="20" step="0.5" placeholder="高">
         </div>
     </div>
+</div>
+
+<div class="row">
     <div class="form-group">
         <label>视角</label>
         <div class="row" style="gap: 10px;">
@@ -153,9 +141,6 @@
         </div>
         <div class="help-text">仰角(0-90°) 方位角(0-360°)</div>
     </div>
-</div>
-
-<div class="row">
     <div class="form-group">
         <label for="markerStyle">标记样式</label>
         <select id="markerStyle">
@@ -170,8 +155,11 @@
             <option value="none">无标记</option>
         </select>
     </div>
+</div>
+
+<div class="row">
     <div class="form-group">
-        <div class="checkbox-group" style="margin-top: 25px;">
+        <div class="checkbox-group">
             <input type="checkbox" id="showValues" checked>
             <label for="showValues">显示数值标签</label>
         </div>
@@ -188,17 +176,16 @@
 {% block extra_js %}
 {{ super() }}
 <script>
+    // DOM元素
     const chartTitle = document.getElementById('chartTitle');
     const xLabels = document.getElementById('xLabels');
-    const seriesNames = document.getElementById('seriesNames');
+    const seriesNames3d = document.getElementById('seriesNames3d');
     const xLabel = document.getElementById('xLabel');
     const yLabel = document.getElementById('yLabel');
     const zLabel = document.getElementById('zLabel');
     const color1 = document.getElementById('color1');
     const color2 = document.getElementById('color2');
     const color3 = document.getElementById('color3');
-    const color4 = document.getElementById('color4');
-    const color5 = document.getElementById('color5');
     const bgColor = document.getElementById('bgColor');
     const lineWidth = document.getElementById('lineWidth');
     const markerSize = document.getElementById('markerSize');
@@ -210,73 +197,88 @@
     const showValues = document.getElementById('showValues');
     const elev = document.getElementById('elev');
     const azim = document.getElementById('azim');
-    const seriesCount3D = document.getElementById('seriesCount3D');
-    const pointCount3D = document.getElementById('pointCount3D');
-    const updateSeries3DBtn = document.getElementById('updateSeries3DBtn');
-    const series3DInputContainer = document.getElementById('series3DInputContainer');
+    
+    const line3dDataInput = document.getElementById('line3dDataInput');
+    const loadLine3dSampleBtn = document.getElementById('loadLine3dSampleBtn');
+    const line3dParseStatus = document.getElementById('line3dParseStatus');
+    const line3dPreview = document.getElementById('line3dPreview');
+    const line3dResultDisplay = document.getElementById('line3dResultDisplay');
 
-    // 生成3D系列输入框
-    function generateSeries3DInputs() {
-        const nSeries = parseInt(seriesCount3D.value) || 3;
-        const nPoints = parseInt(pointCount3D.value) || 5;
+    let parsedLine3dData = null;
+
+    // 解析3D折线图数据
+    function parseLine3dData(text) {
+        const parts = text.split(';').map(s => s.trim()).filter(s => s);
+        const data = [];
+        let cols = 0;
         
-        const clampedSeries = Math.max(1, Math.min(10, nSeries));
-        const clampedPoints = Math.max(2, Math.min(20, nPoints));
-        
-        if (clampedSeries !== nSeries) seriesCount3D.value = clampedSeries;
-        if (clampedPoints !== nPoints) pointCount3D.value = clampedPoints;
-        
-        const names = parseStringList(seriesNames.value) || [];
-        
-        let html = '';
-        for (let i = 0; i < clampedSeries; i++) {
-            const defaultData = Array.from({length: clampedPoints}, () => Math.floor(Math.random() * 30) + 5).join(',');
-            const name = names[i] || `系列${i+1}`;
-            html += `
-                <div class="form-group" style="margin-bottom: 10px;">
-                    <label for="series3d_${i}">${name} <span class="optional">(用逗号分隔)</span></label>
-                    <input type="text" id="series3d_${i}" class="series3d-input" value="${defaultData}" placeholder="例如: 10,20,15,30,25">
-                    <div class="help-text">输入 ${clampedPoints} 个数字，用英文逗号分隔</div>
-                </div>
-            `;
+        for (const part of parts) {
+            const values = part.split(',').map(s => parseFloat(s.trim())).filter(v => !isNaN(v));
+            if (values.length > 0) {
+                if (cols === 0) cols = values.length;
+                if (values.length !== cols) {
+                    return { success: false, error: `系列 ${data.length + 1} 数据点数(${values.length})与第一系列(${cols})不一致` };
+                }
+                data.push(values);
+            }
         }
-        series3DInputContainer.innerHTML = html;
+        
+        if (data.length === 0) {
+            return { success: false, error: '没有有效数据' };
+        }
+        
+        return { success: true, data: data, series: data.length, points: cols };
     }
 
-    // 更新3D系列输入
-    updateSeries3DBtn.addEventListener('click', generateSeries3DInputs);
-
-    // 系列名称变化时更新标签
-    seriesNames.addEventListener('change', generateSeries3DInputs);
-
-    // 初始化时生成
-    document.addEventListener('DOMContentLoaded', generateSeries3DInputs);
-
-    function buildConfig() {
-        const nSeries = parseInt(seriesCount3D.value) || 3;
-        const nPoints = parseInt(pointCount3D.value) || 5;
-        
-        const data = [];
-        let isValid = true;
-        
-        for (let i = 0; i < nSeries; i++) {
-            const input = document.getElementById(`series3d_${i}`);
-            if (!input) continue;
-            
-            const values = parseData(input.value);
-            if (values.length !== nPoints) {
-                showError(`系列 ${i+1} 数据数量(${values.length})与预期点数(${nPoints})不一致`);
-                isValid = false;
-                break;
-            }
-            data.push(values);
+    function autoParseLine3d() {
+        const text = line3dDataInput.value.trim();
+        if (!text) {
+            line3dParseStatus.textContent = '📊 等待输入...';
+            line3dPreview.style.display = 'none';
+            parsedLine3dData = null;
+            return;
         }
         
-        if (!isValid) return null;
+        const result = parseLine3dData(text);
+        if (!result.success) {
+            line3dParseStatus.textContent = '❌ ' + result.error;
+            line3dPreview.style.display = 'none';
+            parsedLine3dData = null;
+            return;
+        }
+        
+        parsedLine3dData = result.data;
+        
+        const names = parseStringList(seriesNames3d.value);
+        let displayText = `✅ ${result.series} 个系列 × ${result.points} 个数据点\n`;
+        result.data.forEach((row, i) => {
+            const name = (names && names[i]) ? names[i] : `系列${i+1}`;
+            displayText += `${name}: [${row.join(', ')}]\n`;
+        });
+        line3dResultDisplay.textContent = displayText;
+        line3dPreview.style.display = 'block';
+        line3dParseStatus.textContent = `✅ 解析成功！${result.series} 个系列 × ${result.points} 个数据点`;
+    }
+
+    function loadLine3dSample() {
+        line3dDataInput.value = '10,20,15,30,25; 5,15,25,20,35; 15,10,20,25,30';
+        seriesNames3d.value = '系列1,系列2,系列3';
+        autoParseLine3d();
+    }
+
+    function buildConfig() {
+        if (!parsedLine3dData || parsedLine3dData.length === 0) {
+            showError('请先输入并解析数据');
+            return null;
+        }
+        
+        const data = parsedLine3dData;
+        const nSeries = data.length;
+        const nPoints = data[0].length;
         
         const xLabelsList = parseStringList(xLabels.value) || null;
-        const names = parseStringList(seriesNames.value) || null;
-        const colors = [color1.value, color2.value, color3.value, color4.value, color5.value];
+        const names = parseStringList(seriesNames3d.value) || null;
+        const colors = [color1.value, color2.value, color3.value];
         
         if (xLabelsList && xLabelsList.length !== nPoints) {
             showError(`X轴标签数量(${xLabelsList.length})与数据点数量(${nPoints})不一致`);
@@ -311,13 +313,16 @@
         };
     }
 
-    // 回车键生成
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && e.target.classList.contains('series3d-input')) {
-            generateBtn.click();
-        }
+    // 事件绑定
+    line3dDataInput.addEventListener('input', autoParseLine3d);
+    seriesNames3d.addEventListener('input', autoParseLine3d);
+    loadLine3dSampleBtn.addEventListener('click', loadLine3dSample);
+
+    // 初始化 - 加载示例数据
+    document.addEventListener('DOMContentLoaded', function() {
+        loadLine3dSample();
     });
 
-    console.log('📈 3D折线图生成器已加载');
+    console.log('📈 3D折线图生成器已加载（分号输入模式）');
 </script>
 {% endblock %}

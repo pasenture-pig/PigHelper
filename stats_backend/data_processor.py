@@ -136,17 +136,22 @@ class DataProcessor:
         }
     
     def _safe_float(self, val):
+        """安全转换为浮点数 - 严格模式"""
         if pd.isna(val) or val is None or val == '':
             return None
         if isinstance(val, (int, float)):
+            if np.isnan(val) or np.isinf(val):
+                return None
             return float(val)
         if isinstance(val, str):
             cleaned = re.sub(r'[^\d.\-eE+]', '', val.strip())
             if cleaned:
                 try:
-                    return float(cleaned)
+                    num = float(cleaned)
+                    if not np.isnan(num) and not np.isinf(num):
+                        return num
                 except:
-                    return None
+                    pass
         return None
     
     def extract_data(self, mode='row', index=0, start_row=0, start_col=0, allow_non_numeric=False):
@@ -155,12 +160,10 @@ class DataProcessor:
         
         参数:
             mode: 'row', 'col', 'all'
-            index: 行或列的索引
-                - 行模式: 0=表头(列名), 1=第一行数据, 2=第二行数据...
-                - 列模式: 0=行索引(行标签), 1=第一列数据, 2=第二列数据...
+            index: 行或列的索引（0=表头/行索引）
             allow_non_numeric: 是否允许非数值数据
-            start_row: 起始行（从0开始，仅对数据行有效）
-            start_col: 起始列（从0开始，仅对数据列有效）
+            start_row: 起始行（0=表头行）
+            start_col: 起始列（0=表头列）
         """
         if self.df is None or self.df.empty:
             return {'success': False, 'error': '没有数据'}
@@ -169,40 +172,21 @@ class DataProcessor:
         if mode == 'row':
             # index == 0 表示提取表头（列名）
             if index == 0:
-                # 提取列名（从 start_col 开始）
                 header_values = self.df.columns.tolist()[start_col:]
-                
-                if allow_non_numeric:
-                    return {
-                        'success': True,
-                        'values': [],
-                        'raw_data': [header_values],
-                        'header_data': header_values,
-                        'label': '表头',
-                        'source_label': f'表头 (列名) [从列 {start_col} 开始]',
-                        'mode': 'row',
-                        'index': 0,
-                        'count': len(header_values),
-                        'has_non_numeric': True,
-                        'is_header': True
-                    }
-                else:
-                    # 表头默认开启非数值模式
-                    return {
-                        'success': True,
-                        'values': [],
-                        'raw_data': [header_values],
-                        'header_data': header_values,
-                        'label': '表头',
-                        'source_label': f'表头 (列名) [从列 {start_col} 开始]',
-                        'mode': 'row',
-                        'index': 0,
-                        'count': len(header_values),
-                        'has_non_numeric': True,
-                        'is_header': True
-                    }
+                return {
+                    'success': True,
+                    'values': [],
+                    'raw_data': [header_values],
+                    'header_data': header_values,
+                    'label': '表头',
+                    'source_label': f'表头 (列名) [从列 {start_col} 开始]',
+                    'mode': 'row',
+                    'index': 0,
+                    'count': len(header_values),
+                    'has_non_numeric': True,
+                    'is_header': True
+                }
             
-            # index >= 1 表示提取数据行（第 index-1 行）
             data_index = index - 1
             if data_index >= len(self.df):
                 return {'success': False, 'error': f'行 {index} 不存在，当前有 {len(self.df)} 行数据'}
@@ -212,15 +196,38 @@ class DataProcessor:
             if start_col > 0:
                 row_series = row_series.iloc[start_col:]
             
-            # 提取所有数据（包括非数值）
+            raw_values = []
+            numeric_values = []
+            non_numeric_found = False
+            
+            for val in row_series:
+                raw_values.append(str(val))
+                num = self._safe_float(val)
+                if num is not None:
+                    numeric_values.append(num)
+                else:
+                    non_numeric_found = True
+            
+            # 如果不允许非数值数据，但发现了非数值
+            if not allow_non_numeric and non_numeric_found:
+                if not numeric_values:
+                    return {'success': False, 'error': f'行 {index} 从第 {start_col} 列开始没有数值数据，请开启"允许非数值数据"'}
+                return {
+                    'success': True,
+                    'values': numeric_values,
+                    'raw_data': [raw_values],
+                    'header_data': self.df.columns.tolist()[start_col:],
+                    'label': f'行{index}',
+                    'source_label': f'行 {index} (从列 {start_col} 开始) [仅数值]',
+                    'mode': 'row',
+                    'index': index,
+                    'count': len(numeric_values),
+                    'has_non_numeric': False,
+                    'is_header': False,
+                    'non_numeric_ignored': True
+                }
+            
             if allow_non_numeric:
-                raw_values = [str(v) for v in row_series]
-                numeric_values = []
-                for v in row_series:
-                    num = self._safe_float(v)
-                    if num is not None:
-                        numeric_values.append(num)
-                
                 return {
                     'success': True,
                     'values': numeric_values,
@@ -235,39 +242,27 @@ class DataProcessor:
                     'is_header': False
                 }
             
-            # 只提取数值
-            values = []
-            raw_values = []
-            for val in row_series:
-                raw_values.append(val)
-                num = self._safe_float(val)
-                if num is not None:
-                    values.append(num)
-            
-            if not values:
+            if not numeric_values:
                 return {'success': False, 'error': f'行 {index} 从第 {start_col} 列开始没有数值数据，请开启"允许非数值数据"'}
             
             return {
                 'success': True,
-                'values': values,
+                'values': numeric_values,
                 'raw_data': [raw_values],
                 'header_data': self.df.columns.tolist()[start_col:],
                 'label': f'行{index}',
                 'source_label': f'行 {index} (从列 {start_col} 开始)',
                 'mode': 'row',
                 'index': index,
-                'count': len(values),
+                'count': len(numeric_values),
                 'has_non_numeric': False,
                 'is_header': False
             }
         
         # ===== 按列提取 =====
         if mode == 'col':
-            # index == 0 表示提取行索引（行标签）
             if index == 0:
-                # 获取行索引
                 row_labels = self.df.index.tolist()[start_row:]
-                
                 return {
                     'success': True,
                     'values': [],
@@ -282,7 +277,6 @@ class DataProcessor:
                     'is_header': True
                 }
             
-            # index >= 1 表示提取数据列（第 index-1 列）
             col_index = index - 1
             if col_index >= len(self.df.columns):
                 return {'success': False, 'error': f'列 {index} 不存在，当前有 {len(self.df.columns)} 列'}
@@ -290,14 +284,37 @@ class DataProcessor:
             col_name = self.df.columns[col_index]
             col_data = self.df[col_name].iloc[start_row:]
             
+            raw_values = []
+            numeric_values = []
+            non_numeric_found = False
+            
+            for val in col_data:
+                raw_values.append(str(val))
+                num = self._safe_float(val)
+                if num is not None:
+                    numeric_values.append(num)
+                else:
+                    non_numeric_found = True
+            
+            if not allow_non_numeric and non_numeric_found:
+                if not numeric_values:
+                    return {'success': False, 'error': f'列 "{col_name}" 从第 {start_row} 行开始没有数值数据，请开启"允许非数值数据"'}
+                return {
+                    'success': True,
+                    'values': numeric_values,
+                    'raw_data': [raw_values],
+                    'header_data': [col_name],
+                    'label': col_name,
+                    'source_label': f'列 "{col_name}" (从行 {start_row} 开始) [仅数值]',
+                    'mode': 'col',
+                    'index': index,
+                    'count': len(numeric_values),
+                    'has_non_numeric': False,
+                    'is_header': False,
+                    'non_numeric_ignored': True
+                }
+            
             if allow_non_numeric:
-                raw_values = [str(v) for v in col_data]
-                numeric_values = []
-                for v in col_data:
-                    num = self._safe_float(v)
-                    if num is not None:
-                        numeric_values.append(num)
-                
                 return {
                     'success': True,
                     'values': numeric_values,
@@ -312,27 +329,19 @@ class DataProcessor:
                     'is_header': False
                 }
             
-            raw_values = []
-            values = []
-            for val in col_data:
-                raw_values.append(val)
-                num = self._safe_float(val)
-                if num is not None:
-                    values.append(num)
-            
-            if not values:
+            if not numeric_values:
                 return {'success': False, 'error': f'列 "{col_name}" 从第 {start_row} 行开始没有数值数据，请开启"允许非数值数据"'}
             
             return {
                 'success': True,
-                'values': values,
+                'values': numeric_values,
                 'raw_data': [raw_values],
                 'header_data': [col_name],
                 'label': col_name,
                 'source_label': f'列 "{col_name}" (从行 {start_row} 开始)',
                 'mode': 'col',
                 'index': index,
-                'count': len(values),
+                'count': len(numeric_values),
                 'has_non_numeric': False,
                 'is_header': False
             }
@@ -346,7 +355,6 @@ class DataProcessor:
             
             if allow_non_numeric:
                 header_row = data_slice.columns.tolist()
-                
                 raw_data = []
                 numeric_values = []
                 for idx, row in data_slice.iterrows():
@@ -364,7 +372,6 @@ class DataProcessor:
                     'raw_data': raw_data,
                     'header_data': header_row,
                     'label': '全部数据',
-                    # ✅ 修改这里：start_row + 1 和 start_col + 1 显示从1开始
                     'source_label': f'全部数据 (行{start_row + 1}→, 列{start_col + 1}→) [含非数值]',
                     'mode': 'all',
                     'index': 0,
@@ -375,6 +382,7 @@ class DataProcessor:
             
             raw_data = []
             values = []
+            non_numeric_found = False
             for idx, row in data_slice.iterrows():
                 row_values = []
                 for val in row:
@@ -382,10 +390,15 @@ class DataProcessor:
                     num = self._safe_float(val)
                     if num is not None:
                         values.append(num)
+                    else:
+                        non_numeric_found = True
                 raw_data.append(row_values)
             
-            if not values:
+            if not values and non_numeric_found:
                 return {'success': False, 'error': f'从第 {start_row + 1} 行第 {start_col + 1} 列开始没有数值数据，请开启"允许非数值数据"'}
+            
+            if not values:
+                return {'success': False, 'error': f'从第 {start_row + 1} 行第 {start_col + 1} 列开始没有数值数据'}
             
             return {
                 'success': True,
@@ -393,16 +406,40 @@ class DataProcessor:
                 'raw_data': raw_data,
                 'header_data': data_slice.columns.tolist(),
                 'label': '全部数据',
-                # ✅ 修改这里：start_row + 1 和 start_col + 1 显示从1开始
                 'source_label': f'全部数据 (行{start_row + 1}→, 列{start_col + 1}→)',
                 'mode': 'all',
                 'index': 0,
                 'count': len(values),
                 'has_non_numeric': False,
-                'is_header': False
+                'is_header': False,
+                'non_numeric_ignored': non_numeric_found
             }
         
         return {'success': False, 'error': f'不支持的提取模式: {mode}'}
+    
+    def transpose_data(self):
+        """行列互换（转置）"""
+        if self.df is None or self.df.empty:
+            return {'success': False, 'error': '没有数据'}
+        
+        # 保存原有的列名和行索引
+        old_columns = self.df.columns.tolist()
+        old_index = self.df.index.tolist()
+        
+        # 转置
+        self.df = self.df.T
+        
+        # 重新设置列名和索引
+        self.df.columns = old_index
+        self.df.index = old_columns
+        
+        self._update_preview()
+        return {
+            'success': True,
+            'rows': len(self.df),
+            'cols': len(self.df.columns),
+            'message': f'转置成功：{len(self.df)} 行 × {len(self.df.columns)} 列'
+        }
     
     def calculate_stats(self, values):
         if not values:

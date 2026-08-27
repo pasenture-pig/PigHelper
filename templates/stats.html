@@ -660,6 +660,7 @@
             <span style="font-size: 13px; color: #888;" id="totalRowsInfo">共 0 行</span>
             <span style="font-size: 13px; color: #888;">💡 数据预览（前100行）</span>
         </div>
+        <button class="file-upload-btn" id="transposeBtn" style="background: #8b5cf6;">🔄 行列互换</button>
     </div>
     
     <!-- 提取设置 - 动态交互 -->
@@ -871,6 +872,7 @@
     const dataCountDisplay = document.getElementById('dataCountDisplay');
     const errorMsg = document.getElementById('errorMsg');
     const successMsg = document.getElementById('successMsg');
+    const transposeBtn = document.getElementById('transposeBtn');
 
     let currentData = null;
     let currentPreviewInfo = null;
@@ -1414,7 +1416,6 @@ async function analyzeData() {
                 new Date().toLocaleString()
             ];
         }
-        
         const content = lines.join('\n');
         const blob = new Blob(['\uFEFF' + content], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
@@ -1428,7 +1429,26 @@ async function analyzeData() {
         
         showSuccess('📥 结果已导出！');
     }
-
+async function transposeData() {
+    try {
+        const response = await fetch(`${API_BASE}/transpose`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await response.json();
+        if (result.success) {
+            renderPreview(result.preview);
+            showSuccess(`✅ ${result.message}`);
+            resultSection.classList.remove('active');
+            exportBtn.disabled = true;
+            updateExtractFields();
+        } else {
+            showError('转置失败: ' + result.error);
+        }
+    } catch (error) {
+        showError('网络错误: ' + error.message);
+    }
+}
     // ============ 重置 ============
     async function resetData() {
         try {
@@ -1465,6 +1485,8 @@ async function analyzeData() {
     applyEditBtn.addEventListener('click', recalculateFromEditor);
 
     extractMode.addEventListener('change', updateExtractFields);
+
+    transposeBtn.addEventListener('click', transposeData);
 
     [rowIndex, rowStartCol, colIndex, colStartRow, startRowAll, startColAll, includeHeaders, extractHeader].forEach(el => {
         if (el) {

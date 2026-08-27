@@ -40,29 +40,31 @@
     <input type="text" id="cbarLabel" placeholder="例如: 数值" value="数值">
 </div>
 
-<!-- 数据矩阵管理 -->
+<!-- 分号输入模式 -->
 <div class="form-section" style="margin-top: 15px; background: #f0f4ff; border-radius: 12px; padding: 15px; border: 1px solid #c7d2fe;">
     <div class="form-section-title" style="margin-bottom: 10px; font-size: 14px;">
-        📊 数据矩阵
+        📊 数据输入
         <span class="badge" style="font-size: 11px;">必填</span>
+        <span style="font-size: 12px; color: #888; font-weight: 400; margin-left: 5px;">每行用分号分隔，每列用逗号分隔</span>
     </div>
     
-    <div class="row" style="margin-bottom: 10px;">
-        <div class="form-group" style="margin-bottom: 0;">
-            <label for="rowCount">行数</label>
-            <input type="number" id="rowCount" value="4" min="1" max="15" step="1">
-        </div>
-        <div class="form-group" style="margin-bottom: 0;">
-            <label for="colCount">列数</label>
-            <input type="number" id="colCount" value="4" min="1" max="15" step="1">
-        </div>
+    <div class="form-group" style="margin-bottom: 0;">
+        <label for="heatmapDataInput">矩阵数据</label>
+        <textarea id="heatmapDataInput" rows="4" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 13px;" placeholder="格式: 行1数据; 行2数据; 行3数据&#10;例如:&#10;10,20,30,25; 15,35,20,30; 25,10,40,15; 30,25,15,35">10,20,30,25; 15,35,20,30; 25,10,40,15; 30,25,15,35</textarea>
+        <div class="help-text">💡 用分号分隔行，逗号分隔列</div>
     </div>
-    <button class="btn btn-primary" id="updateMatrixBtn" style="padding: 8px 20px; font-size: 14px; flex: 0 1 auto; min-width: auto;">更新数据输入</button>
-    <div class="help-text" style="margin-top: 8px;">💡 修改行数或列数后点击"更新数据输入"</div>
 </div>
 
-<div id="matrixInputContainer">
-    <!-- 由 JavaScript 动态生成 -->
+<!-- 解析状态和示例按钮 -->
+<div style="display: flex; gap: 15px; margin-top: 8px; flex-wrap: wrap; align-items: center;">
+    <span style="font-size: 13px; color: #888;" id="heatmapParseStatus">📊 等待输入...</span>
+    <button class="btn-sm btn-sm-success" id="loadHeatmapSampleBtn">📊 加载示例</button>
+</div>
+
+<!-- 解析结果预览 -->
+<div id="heatmapPreview" style="display: none; margin-top: 10px; padding: 12px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+    <div style="font-size: 13px; color: #888; margin-bottom: 5px;">📋 解析结果</div>
+    <div id="heatmapResultDisplay" style="font-family: 'Consolas', monospace; font-size: 13px; color: #333; max-height: 120px; overflow-y: auto;"></div>
 </div>
 {% endblock %}
 
@@ -114,7 +116,6 @@
             <option value=".0f%">百分比 (12%)</option>
             <option value=".1f%">百分比一位小数 (12.3%)</option>
         </select>
-        <div class="help-text">数据显示格式</div>
     </div>
     <div class="form-group">
         <label for="fontSize">字体大小 <span class="optional">(8-20)</span></label>
@@ -155,6 +156,7 @@
 {% block extra_js %}
 {{ super() }}
 <script>
+    // DOM元素
     const chartTitle = document.getElementById('chartTitle');
     const xLabels = document.getElementById('xLabels');
     const yLabels = document.getElementById('yLabels');
@@ -170,88 +172,81 @@
     const figWidth = document.getElementById('figWidth');
     const figHeight = document.getElementById('figHeight');
     const showValues = document.getElementById('showValues');
-    const rowCount = document.getElementById('rowCount');
-    const colCount = document.getElementById('colCount');
-    const updateMatrixBtn = document.getElementById('updateMatrixBtn');
-    const matrixInputContainer = document.getElementById('matrixInputContainer');
-
-    // 安全获取元素值的辅助函数
-    function getVal(id) {
-        const el = document.getElementById(id);
-        return el ? el.value : '';
-    }
     
-    function getNum(id) {
-        const el = document.getElementById(id);
-        return el && el.value !== '' ? parseFloat(el.value) : null;
-    }
-    
-    function getChecked(id) {
-        const el = document.getElementById(id);
-        return el ? el.checked : false;
-    }
+    const heatmapDataInput = document.getElementById('heatmapDataInput');
+    const loadHeatmapSampleBtn = document.getElementById('loadHeatmapSampleBtn');
+    const heatmapParseStatus = document.getElementById('heatmapParseStatus');
+    const heatmapPreview = document.getElementById('heatmapPreview');
+    const heatmapResultDisplay = document.getElementById('heatmapResultDisplay');
 
-    // 生成矩阵输入框
-    function generateMatrixInputs() {
-        const rows = parseInt(rowCount.value) || 4;
-        const cols = parseInt(colCount.value) || 4;
-        
-        const clampedRows = Math.max(1, Math.min(15, rows));
-        const clampedCols = Math.max(1, Math.min(15, cols));
-        
-        if (clampedRows !== rows) rowCount.value = clampedRows;
-        if (clampedCols !== cols) colCount.value = clampedCols;
-        
-        const xLabelsList = parseStringList(xLabels.value) || [];
-        const yLabelsList = parseStringList(yLabels.value) || [];
-        
-        let html = '';
-        for (let i = 0; i < clampedRows; i++) {
-            const defaultData = Array.from({length: clampedCols}, () => Math.floor(Math.random() * 40) + 10).join(',');
-            const label = yLabelsList[i] || `行${i+1}`;
-            html += `
-                <div class="form-group" style="margin-bottom: 10px;">
-                    <label for="row_${i}">${label} <span class="optional">(用逗号分隔)</span></label>
-                    <input type="text" id="row_${i}" class="matrix-input" value="${defaultData}" placeholder="例如: 10,20,15,30">
-                    <div class="help-text">输入 ${clampedCols} 个数字，用英文逗号分隔</div>
-                </div>
-            `;
-        }
-        matrixInputContainer.innerHTML = html;
-    }
+    let parsedHeatmapData = null;
 
-    // 更新矩阵输入
-    updateMatrixBtn.addEventListener('click', generateMatrixInputs);
-
-    // 标签变化时更新
-    xLabels.addEventListener('change', generateMatrixInputs);
-    yLabels.addEventListener('change', generateMatrixInputs);
-
-    // 初始化时生成
-    document.addEventListener('DOMContentLoaded', generateMatrixInputs);
-
-    // 构建配置
-    function buildConfig() {
-        const rows = parseInt(rowCount.value) || 4;
-        const cols = parseInt(colCount.value) || 4;
-        
+    // 解析分号分隔的热力图数据
+    function parseHeatmapData(text) {
+        const rows = text.split(';').map(s => s.trim()).filter(s => s);
         const data = [];
-        let isValid = true;
+        let cols = 0;
         
-        for (let i = 0; i < rows; i++) {
-            const input = document.getElementById(`row_${i}`);
-            if (!input) continue;
-            
-            const values = parseData(input.value);
-            if (values.length !== cols) {
-                showError(`行 ${i+1} 数据数量(${values.length})与列数(${cols})不一致`);
-                isValid = false;
-                break;
+        for (const row of rows) {
+            const values = row.split(',').map(s => parseFloat(s.trim())).filter(v => !isNaN(v));
+            if (values.length > 0) {
+                if (cols === 0) cols = values.length;
+                if (values.length !== cols) {
+                    return { success: false, error: `行 ${data.length + 1} 列数(${values.length})与第一行列数(${cols})不一致` };
+                }
+                data.push(values);
             }
-            data.push(values);
         }
         
-        if (!isValid) return null;
+        if (data.length === 0) {
+            return { success: false, error: '没有有效数据' };
+        }
+        
+        return { success: true, data: data, rows: data.length, cols: cols };
+    }
+
+    function autoParseHeatmap() {
+        const text = heatmapDataInput.value.trim();
+        if (!text) {
+            heatmapParseStatus.textContent = '📊 等待输入...';
+            heatmapPreview.style.display = 'none';
+            parsedHeatmapData = null;
+            return;
+        }
+        
+        const result = parseHeatmapData(text);
+        if (!result.success) {
+            heatmapParseStatus.textContent = '❌ ' + result.error;
+            heatmapPreview.style.display = 'none';
+            parsedHeatmapData = null;
+            return;
+        }
+        
+        parsedHeatmapData = result.data;
+        
+        let displayText = `✅ ${result.rows} 行 × ${result.cols} 列\n`;
+        result.data.forEach((row, i) => {
+            displayText += `行${i+1}: [${row.join(', ')}]\n`;
+        });
+        heatmapResultDisplay.textContent = displayText;
+        heatmapPreview.style.display = 'block';
+        heatmapParseStatus.textContent = `✅ 解析成功！${result.rows} 行 × ${result.cols} 列`;
+    }
+
+    function loadHeatmapSample() {
+        heatmapDataInput.value = '10,20,30,25; 15,35,20,30; 25,10,40,15; 30,25,15,35';
+        autoParseHeatmap();
+    }
+
+    function buildConfig() {
+        if (!parsedHeatmapData || parsedHeatmapData.length === 0) {
+            showError('请先输入并解析数据');
+            return null;
+        }
+        
+        const data = parsedHeatmapData;
+        const rows = data.length;
+        const cols = data[0].length;
         
         const xLabelsList = parseStringList(xLabels.value) || null;
         const yLabelsList = parseStringList(yLabels.value) || null;
@@ -286,13 +281,15 @@
         };
     }
 
-    // 回车键生成
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && e.target.classList.contains('matrix-input')) {
-            generateBtn.click();
-        }
+    // 事件绑定
+    heatmapDataInput.addEventListener('input', autoParseHeatmap);
+    loadHeatmapSampleBtn.addEventListener('click', loadHeatmapSample);
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        loadHeatmapSample();
     });
 
-    console.log('🔥 热力图生成器已加载');
+    console.log('🔥 热力图生成器已加载（分号输入模式）');
 </script>
 {% endblock %}
