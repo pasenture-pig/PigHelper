@@ -8,6 +8,7 @@ data_processor = DataProcessor()
 
 
 @stats_bp.route('/upload', methods=['POST'])
+@stats_bp.route('/upload', methods=['POST'])
 def upload_file():
     try:
         if 'file' not in request.files:
@@ -17,16 +18,24 @@ def upload_file():
         if file.filename == '':
             return jsonify({'success': False, 'error': '文件名为空'})
         
+        # 获取文件内容
         file_content = file.read()
         filename = file.filename.lower()
         
+        # 根据文件扩展名选择加载方法
         if filename.endswith('.csv'):
             encoding = request.form.get('encoding', 'utf-8')
             result = data_processor.load_csv(file_content, encoding)
-        elif filename.endswith(('.xlsx', '.xls')):
-            result = data_processor.load_excel(file_content)
+        elif filename.endswith('.xlsx'):
+            result = data_processor.load_excel(file_content, sheet_name=0)
+        elif filename.endswith('.xls'):
+            # 旧版 Excel 格式
+            try:
+                result = data_processor.load_excel(file_content, sheet_name=0)
+            except:
+                return jsonify({'success': False, 'error': '无法读取 .xls 文件，请转换为 .xlsx 格式'})
         else:
-            return jsonify({'success': False, 'error': '不支持的文件格式，请上传 CSV 或 Excel 文件'})
+            return jsonify({'success': False, 'error': '不支持的文件格式，请上传 CSV 或 Excel 文件 (.csv, .xlsx, .xls)'})
         
         if result.get('success'):
             preview = data_processor.get_preview(start_row=0, max_rows=50)
@@ -43,6 +52,8 @@ def upload_file():
             return jsonify({'success': False, 'error': result.get('error', '加载失败')})
     
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)})
 
 

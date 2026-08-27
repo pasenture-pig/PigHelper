@@ -15,13 +15,14 @@ class DataProcessor:
         self.data_preview = []
     
     def load_csv(self, file_content, encoding='utf-8'):
+        """加载CSV文件"""
         try:
             self.df = pd.read_csv(io.BytesIO(file_content), encoding=encoding)
             self._clean_data()
             self._update_preview()
             return {'success': True, 'rows': len(self.df), 'cols': len(self.df.columns)}
         except UnicodeDecodeError:
-            encodings = ['gbk', 'gb2312', 'gb18030', 'utf-8-sig']
+            encodings = ['gbk', 'gb2312', 'gb18030', 'utf-8-sig', 'latin-1']
             for enc in encodings:
                 try:
                     self.df = pd.read_csv(io.BytesIO(file_content), encoding=enc)
@@ -30,20 +31,28 @@ class DataProcessor:
                     return {'success': True, 'rows': len(self.df), 'cols': len(self.df.columns)}
                 except:
                     continue
-            return {'success': False, 'error': '无法识别文件编码'}
+            return {'success': False, 'error': '无法识别文件编码，请尝试保存为UTF-8格式'}
         except Exception as e:
-            return {'success': False, 'error': str(e)}
+            return {'success': False, 'error': f'CSV加载失败: {str(e)}'}
     
     def load_excel(self, file_content, sheet_name=0):
+        """加载Excel文件"""
         try:
-            self.df = pd.read_excel(io.BytesIO(file_content), sheet_name=sheet_name)
+            self.df = pd.read_excel(io.BytesIO(file_content), sheet_name=sheet_name, engine='openpyxl')
             self._clean_data()
             self._update_preview()
             return {'success': True, 'rows': len(self.df), 'cols': len(self.df.columns)}
         except Exception as e:
-            return {'success': False, 'error': str(e)}
+            try:
+                self.df = pd.read_excel(io.BytesIO(file_content), sheet_name=sheet_name, engine='xlrd')
+                self._clean_data()
+                self._update_preview()
+                return {'success': True, 'rows': len(self.df), 'cols': len(self.df.columns)}
+            except:
+                return {'success': False, 'error': f'Excel加载失败: {str(e)}'}
     
     def load_text_table(self, text_content):
+        """从文本粘贴加载表格数据"""
         try:
             lines = [line.strip() for line in text_content.split('\n') if line.strip()]
             if not lines:
@@ -84,6 +93,7 @@ class DataProcessor:
             return {'success': False, 'error': str(e)}
     
     def _clean_data(self):
+        """清洗数据，尝试将字符串转换为数值"""
         if self.df is None or self.df.empty:
             return
         
@@ -111,6 +121,7 @@ class DataProcessor:
                 self.df[col] = self.df[col].apply(try_parse_num)
     
     def _update_preview(self):
+        """更新预览数据"""
         if self.df is None or self.df.empty:
             self.headers = []
             self.data_preview = []
@@ -121,6 +132,7 @@ class DataProcessor:
         self.data_preview = self.df.head(preview_rows).values.tolist()
     
     def get_preview(self, start_row=0, max_rows=50):
+        """获取数据预览"""
         if self.df is None or self.df.empty:
             return {'headers': [], 'data': [], 'total_rows': 0}
         
@@ -155,22 +167,12 @@ class DataProcessor:
         return None
     
     def extract_data(self, mode='row', index=0, start_row=0, start_col=0, allow_non_numeric=False):
-        """
-        提取数据
-        
-        参数:
-            mode: 'row', 'col', 'all'
-            index: 行或列的索引（0=表头/行索引）
-            allow_non_numeric: 是否允许非数值数据
-            start_row: 起始行（0=表头行）
-            start_col: 起始列（0=表头列）
-        """
+        """提取数据"""
         if self.df is None or self.df.empty:
             return {'success': False, 'error': '没有数据'}
         
         # ===== 按行提取 =====
         if mode == 'row':
-            # index == 0 表示提取表头（列名）
             if index == 0:
                 header_values = self.df.columns.tolist()[start_col:]
                 return {
@@ -192,7 +194,6 @@ class DataProcessor:
                 return {'success': False, 'error': f'行 {index} 不存在，当前有 {len(self.df)} 行数据'}
             
             row_series = self.df.iloc[data_index]
-            
             if start_col > 0:
                 row_series = row_series.iloc[start_col:]
             
@@ -208,7 +209,6 @@ class DataProcessor:
                 else:
                     non_numeric_found = True
             
-            # 如果不允许非数值数据，但发现了非数值
             if not allow_non_numeric and non_numeric_found:
                 if not numeric_values:
                     return {'success': False, 'error': f'行 {index} 从第 {start_col} 列开始没有数值数据，请开启"允许非数值数据"'}
@@ -422,14 +422,10 @@ class DataProcessor:
         if self.df is None or self.df.empty:
             return {'success': False, 'error': '没有数据'}
         
-        # 保存原有的列名和行索引
         old_columns = self.df.columns.tolist()
         old_index = self.df.index.tolist()
         
-        # 转置
         self.df = self.df.T
-        
-        # 重新设置列名和索引
         self.df.columns = old_index
         self.df.index = old_columns
         
@@ -442,6 +438,7 @@ class DataProcessor:
         }
     
     def calculate_stats(self, values):
+        """计算统计指标"""
         if not values:
             return None
         
