@@ -79,6 +79,14 @@
         box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
     }
     
+    .quick-btn.primary.green {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    
+    .quick-btn.primary.green:hover {
+        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+    }
+    
     .quick-btn.secondary {
         background: #f0f0f0;
         color: #666;
@@ -101,7 +109,7 @@
     
     .features-section {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 25px;
         margin-top: 30px;
     }
@@ -116,6 +124,9 @@
         border: 2px solid transparent;
         position: relative;
         overflow: hidden;
+        text-decoration: none;
+        display: block;
+        color: inherit;
     }
     
     .feature-card::before {
@@ -166,11 +177,12 @@
         color: #888;
         font-size: 14px;
         line-height: 1.6;
+        margin: 0;
     }
     
     .feature-card .status-badge {
         display: inline-block;
-        margin-top: 10px;
+        margin-top: 12px;
         padding: 3px 14px;
         border-radius: 20px;
         font-size: 12px;
@@ -182,17 +194,12 @@
         color: #065f46;
     }
     
-    .status-badge.coming {
-        background: #fef3c7;
-        color: #92400e;
-    }
-    
     .status-badge.planning {
         background: #e5e7eb;
         color: #6b7280;
     }
     
-    .feature-card .coming-tag {
+    .feature-card .new-badge {
         position: absolute;
         top: 10px;
         right: 10px;
@@ -202,18 +209,12 @@
         border-radius: 12px;
         font-size: 11px;
         font-weight: 600;
+        animation: pulse 1.5s ease-in-out infinite;
     }
     
-    .feature-card .planning-tag {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: #9ca3af;
-        color: white;
-        padding: 2px 12px;
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: 600;
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
     }
     
     @media (max-width: 768px) {
@@ -238,32 +239,32 @@
     <h1>欢迎来到 <span class="highlight">猪咪小帮手</span></h1>
     <p>🐷 你的贴心小助手，让生活更简单！这里汇聚了各种实用小工具，帮你提高效率、解决问题。</p>
     <div class="quick-actions">
-        <a href="/charts" class="quick-btn primary">📊 开始使用图表工具</a>
+        <a href="/charts" class="quick-btn primary">📊 图表工具</a>
+        <a href="/stats" class="quick-btn primary green">📈 数据分析</a>
         <a href="#" class="quick-btn secondary disabled" onclick="return false;">📝 更多工具即将上线</a>
     </div>
 </div>
 
 <div class="features-section">
-    <!-- 图表生成器  -->
-    <a href="/charts" class="feature-card" style="text-decoration:none;">
+    <!-- 图表生成器 -->
+    <a href="/charts" class="feature-card">
         <span class="icon">📊</span>
         <h3>图表生成器</h3>
-        <p>轻松创建专业图表，支持柱状图、折线图等多种类型</p>
+        <p>轻松创建专业图表，支持柱状图、折线图、散点图、3D图表等多种类型</p>
         <span class="status-badge ready">✅ 已上线</span>
     </a>
     
-    <!-- 数据提取 - 开发中 -->
-    <div class="feature-card disabled">
-        <span class="planning-tag">规划中</span>
-        <span class="icon">🔍</span>
-        <h3>数据提取</h3>
-        <p>从图片、PDF、网页中智能提取结构化数据</p>
-        <span class="status-badge planning">📋 规划中</span>
-    </div>
+    <!-- 数据分析（包含数据提取功能） -->
+    <a href="/stats" class="feature-card">
+        <span class="new-badge">NEW</span>
+        <span class="icon">📈</span>
+        <h3>数据分析</h3>
+        <p>上传 CSV/Excel 文件，按行/列提取数据，自动计算平均值、方差、极差等统计指标</p>
+        <span class="status-badge ready">✅ 已上线</span>
+    </a>
     
-    <!-- 公式转化 - 开发中 -->
+    <!-- 公式转化 - 规划中 -->
     <div class="feature-card disabled">
-        <span class="planning-tag">规划中</span>
         <span class="icon">📐</span>
         <h3>公式转化</h3>
         <p>图片公式转LaTeX、数学表达式识别与计算</p>

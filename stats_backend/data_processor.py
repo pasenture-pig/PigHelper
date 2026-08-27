@@ -1,0 +1,450 @@
+# stats_backend/data_processor.py
+import pandas as pd
+import numpy as np
+import io
+import re
+from collections import Counter
+
+
+class DataProcessor:
+    """数据处理器"""
+    
+    def __init__(self):
+        self.df = None
+        self.headers = []
+        self.data_preview = []
+    
+    def load_csv(self, file_content, encoding='utf-8'):
+        try:
+            self.df = pd.read_csv(io.BytesIO(file_content), encoding=encoding)
+            self._clean_data()
+            self._update_preview()
+            return {'success': True, 'rows': len(self.df), 'cols': len(self.df.columns)}
+        except UnicodeDecodeError:
+            encodings = ['gbk', 'gb2312', 'gb18030', 'utf-8-sig']
+            for enc in encodings:
+                try:
+                    self.df = pd.read_csv(io.BytesIO(file_content), encoding=enc)
+                    self._clean_data()
+                    self._update_preview()
+                    return {'success': True, 'rows': len(self.df), 'cols': len(self.df.columns)}
+                except:
+                    continue
+            return {'success': False, 'error': '无法识别文件编码'}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+    
+    def load_excel(self, file_content, sheet_name=0):
+        try:
+            self.df = pd.read_excel(io.BytesIO(file_content), sheet_name=sheet_name)
+            self._clean_data()
+            self._update_preview()
+            return {'success': True, 'rows': len(self.df), 'cols': len(self.df.columns)}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+    
+    def load_text_table(self, text_content):
+        try:
+            lines = [line.strip() for line in text_content.split('\n') if line.strip()]
+            if not lines:
+                return {'success': False, 'error': '没有有效数据'}
+            
+            delimiter = None
+            for line in lines:
+                if '\t' in line:
+                    delimiter = '\t'
+                    break
+                elif ',' in line:
+                    delimiter = ','
+                    break
+            
+            if delimiter:
+                data = [line.split(delimiter) for line in lines]
+            else:
+                data = [re.split(r'\s+', line) for line in lines]
+            
+            self.df = pd.DataFrame(data)
+            
+            if len(self.df) > 0:
+                first_row = self.df.iloc[0].astype(str)
+                has_header = False
+                for val in first_row:
+                    if isinstance(val, str) and any(c.isalpha() or '\u4e00' <= c <= '\u9fff' for c in val):
+                        has_header = True
+                        break
+                
+                if has_header:
+                    self.df.columns = first_row
+                    self.df = self.df.iloc[1:].reset_index(drop=True)
+            
+            self._clean_data()
+            self._update_preview()
+            return {'success': True, 'rows': len(self.df), 'cols': len(self.df.columns)}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+    
+    def _clean_data(self):
+        if self.df is None or self.df.empty:
+            return
+        
+        for col in self.df.columns:
+            try:
+                self.df[col] = pd.to_numeric(self.df[col], errors='ignore')
+            except:
+                pass
+            
+            if self.df[col].dtype == 'object':
+                def try_parse_num(val):
+                    if pd.isna(val) or val == '':
+                        return np.nan
+                    if isinstance(val, (int, float)):
+                        return val
+                    if isinstance(val, str):
+                        cleaned = re.sub(r'[^\d.\-eE+]', '', val.strip())
+                        if cleaned:
+                            try:
+                                return float(cleaned)
+                            except:
+                                pass
+                    return val
+                
+                self.df[col] = self.df[col].apply(try_parse_num)
+    
+    def _update_preview(self):
+        if self.df is None or self.df.empty:
+            self.headers = []
+            self.data_preview = []
+            return
+        
+        self.headers = self.df.columns.tolist()
+        preview_rows = min(100, len(self.df))
+        self.data_preview = self.df.head(preview_rows).values.tolist()
+    
+    def get_preview(self, start_row=0, max_rows=50):
+        if self.df is None or self.df.empty:
+            return {'headers': [], 'data': [], 'total_rows': 0}
+        
+        end_row = min(start_row + max_rows, len(self.df))
+        data = self.df.iloc[start_row:end_row].values.tolist()
+        
+        return {
+            'headers': self.headers,
+            'data': data,
+            'total_rows': len(self.df),
+            'start_row': start_row,
+            'end_row': end_row
+        }
+    
+    def _safe_float(self, val):
+        if pd.isna(val) or val is None or val == '':
+            return None
+        if isinstance(val, (int, float)):
+            return float(val)
+        if isinstance(val, str):
+            cleaned = re.sub(r'[^\d.\-eE+]', '', val.strip())
+            if cleaned:
+                try:
+                    return float(cleaned)
+                except:
+                    return None
+        return None
+    
+    def extract_data(self, mode='row', index=0, start_row=0, start_col=0, allow_non_numeric=False):
+        """
+        提取数据
+        
+        参数:
+            mode: 'row', 'col', 'all'
+            index: 行或列的索引
+                - 行模式: 0=表头(列名), 1=第一行数据, 2=第二行数据...
+                - 列模式: 0=行索引(行标签), 1=第一列数据, 2=第二列数据...
+            allow_non_numeric: 是否允许非数值数据
+            start_row: 起始行（从0开始，仅对数据行有效）
+            start_col: 起始列（从0开始，仅对数据列有效）
+        """
+        if self.df is None or self.df.empty:
+            return {'success': False, 'error': '没有数据'}
+        
+        # ===== 按行提取 =====
+        if mode == 'row':
+            # index == 0 表示提取表头（列名）
+            if index == 0:
+                # 提取列名（从 start_col 开始）
+                header_values = self.df.columns.tolist()[start_col:]
+                
+                if allow_non_numeric:
+                    return {
+                        'success': True,
+                        'values': [],
+                        'raw_data': [header_values],
+                        'header_data': header_values,
+                        'label': '表头',
+                        'source_label': f'表头 (列名) [从列 {start_col} 开始]',
+                        'mode': 'row',
+                        'index': 0,
+                        'count': len(header_values),
+                        'has_non_numeric': True,
+                        'is_header': True
+                    }
+                else:
+                    # 表头默认开启非数值模式
+                    return {
+                        'success': True,
+                        'values': [],
+                        'raw_data': [header_values],
+                        'header_data': header_values,
+                        'label': '表头',
+                        'source_label': f'表头 (列名) [从列 {start_col} 开始]',
+                        'mode': 'row',
+                        'index': 0,
+                        'count': len(header_values),
+                        'has_non_numeric': True,
+                        'is_header': True
+                    }
+            
+            # index >= 1 表示提取数据行（第 index-1 行）
+            data_index = index - 1
+            if data_index >= len(self.df):
+                return {'success': False, 'error': f'行 {index} 不存在，当前有 {len(self.df)} 行数据'}
+            
+            row_series = self.df.iloc[data_index]
+            
+            if start_col > 0:
+                row_series = row_series.iloc[start_col:]
+            
+            # 提取所有数据（包括非数值）
+            if allow_non_numeric:
+                raw_values = [str(v) for v in row_series]
+                numeric_values = []
+                for v in row_series:
+                    num = self._safe_float(v)
+                    if num is not None:
+                        numeric_values.append(num)
+                
+                return {
+                    'success': True,
+                    'values': numeric_values,
+                    'raw_data': [raw_values],
+                    'header_data': self.df.columns.tolist()[start_col:],
+                    'label': f'行{index}',
+                    'source_label': f'行 {index} (从列 {start_col} 开始) [含非数值]',
+                    'mode': 'row',
+                    'index': index,
+                    'count': len(raw_values),
+                    'has_non_numeric': True,
+                    'is_header': False
+                }
+            
+            # 只提取数值
+            values = []
+            raw_values = []
+            for val in row_series:
+                raw_values.append(val)
+                num = self._safe_float(val)
+                if num is not None:
+                    values.append(num)
+            
+            if not values:
+                return {'success': False, 'error': f'行 {index} 从第 {start_col} 列开始没有数值数据，请开启"允许非数值数据"'}
+            
+            return {
+                'success': True,
+                'values': values,
+                'raw_data': [raw_values],
+                'header_data': self.df.columns.tolist()[start_col:],
+                'label': f'行{index}',
+                'source_label': f'行 {index} (从列 {start_col} 开始)',
+                'mode': 'row',
+                'index': index,
+                'count': len(values),
+                'has_non_numeric': False,
+                'is_header': False
+            }
+        
+        # ===== 按列提取 =====
+        if mode == 'col':
+            # index == 0 表示提取行索引（行标签）
+            if index == 0:
+                # 获取行索引
+                row_labels = self.df.index.tolist()[start_row:]
+                
+                return {
+                    'success': True,
+                    'values': [],
+                    'raw_data': [row_labels],
+                    'header_data': row_labels,
+                    'label': '行索引',
+                    'source_label': f'行索引 (从行 {start_row} 开始)',
+                    'mode': 'col',
+                    'index': 0,
+                    'count': len(row_labels),
+                    'has_non_numeric': True,
+                    'is_header': True
+                }
+            
+            # index >= 1 表示提取数据列（第 index-1 列）
+            col_index = index - 1
+            if col_index >= len(self.df.columns):
+                return {'success': False, 'error': f'列 {index} 不存在，当前有 {len(self.df.columns)} 列'}
+            
+            col_name = self.df.columns[col_index]
+            col_data = self.df[col_name].iloc[start_row:]
+            
+            if allow_non_numeric:
+                raw_values = [str(v) for v in col_data]
+                numeric_values = []
+                for v in col_data:
+                    num = self._safe_float(v)
+                    if num is not None:
+                        numeric_values.append(num)
+                
+                return {
+                    'success': True,
+                    'values': numeric_values,
+                    'raw_data': [raw_values],
+                    'header_data': [col_name],
+                    'label': col_name,
+                    'source_label': f'列 "{col_name}" (从行 {start_row} 开始) [含非数值]',
+                    'mode': 'col',
+                    'index': index,
+                    'count': len(raw_values),
+                    'has_non_numeric': True,
+                    'is_header': False
+                }
+            
+            raw_values = []
+            values = []
+            for val in col_data:
+                raw_values.append(val)
+                num = self._safe_float(val)
+                if num is not None:
+                    values.append(num)
+            
+            if not values:
+                return {'success': False, 'error': f'列 "{col_name}" 从第 {start_row} 行开始没有数值数据，请开启"允许非数值数据"'}
+            
+            return {
+                'success': True,
+                'values': values,
+                'raw_data': [raw_values],
+                'header_data': [col_name],
+                'label': col_name,
+                'source_label': f'列 "{col_name}" (从行 {start_row} 开始)',
+                'mode': 'col',
+                'index': index,
+                'count': len(values),
+                'has_non_numeric': False,
+                'is_header': False
+            }
+        
+        # ===== 全部数据模式 =====
+        if mode == 'all':
+            data_slice = self.df.iloc[start_row:, start_col:]
+            
+            if data_slice.empty:
+                return {'success': False, 'error': '指定位置没有数据'}
+            
+            if allow_non_numeric:
+                header_row = data_slice.columns.tolist()
+                
+                raw_data = []
+                numeric_values = []
+                for idx, row in data_slice.iterrows():
+                    row_values = []
+                    for val in row:
+                        row_values.append(str(val))
+                        num = self._safe_float(val)
+                        if num is not None:
+                            numeric_values.append(num)
+                    raw_data.append(row_values)
+                
+                return {
+                    'success': True,
+                    'values': numeric_values,
+                    'raw_data': raw_data,
+                    'header_data': header_row,
+                    'label': '全部数据',
+                    # ✅ 修改这里：start_row + 1 和 start_col + 1 显示从1开始
+                    'source_label': f'全部数据 (行{start_row + 1}→, 列{start_col + 1}→) [含非数值]',
+                    'mode': 'all',
+                    'index': 0,
+                    'count': len(numeric_values),
+                    'has_non_numeric': True,
+                    'is_header': False
+                }
+            
+            raw_data = []
+            values = []
+            for idx, row in data_slice.iterrows():
+                row_values = []
+                for val in row:
+                    row_values.append(val)
+                    num = self._safe_float(val)
+                    if num is not None:
+                        values.append(num)
+                raw_data.append(row_values)
+            
+            if not values:
+                return {'success': False, 'error': f'从第 {start_row + 1} 行第 {start_col + 1} 列开始没有数值数据，请开启"允许非数值数据"'}
+            
+            return {
+                'success': True,
+                'values': values,
+                'raw_data': raw_data,
+                'header_data': data_slice.columns.tolist(),
+                'label': '全部数据',
+                # ✅ 修改这里：start_row + 1 和 start_col + 1 显示从1开始
+                'source_label': f'全部数据 (行{start_row + 1}→, 列{start_col + 1}→)',
+                'mode': 'all',
+                'index': 0,
+                'count': len(values),
+                'has_non_numeric': False,
+                'is_header': False
+            }
+        
+        return {'success': False, 'error': f'不支持的提取模式: {mode}'}
+    
+    def calculate_stats(self, values):
+        if not values:
+            return None
+        
+        n = len(values)
+        sorted_vals = sorted(values)
+        
+        sum_val = sum(values)
+        mean = sum_val / n
+        variance = sum((v - mean) ** 2 for v in values) / (n - 1) if n > 1 else 0
+        std = variance ** 0.5 if variance > 0 else 0
+        
+        max_val = max(values)
+        min_val = min(values)
+        range_val = max_val - min_val
+        
+        if n % 2 == 0:
+            median = (sorted_vals[n//2 - 1] + sorted_vals[n//2]) / 2
+        else:
+            median = sorted_vals[n//2]
+        
+        counter = Counter(values)
+        max_freq = max(counter.values())
+        modes = [str(k) for k, v in counter.items() if v == max_freq]
+        
+        return {
+            'count': n,
+            'sum': sum_val,
+            'mean': mean,
+            'variance': variance,
+            'std': std,
+            'max': max_val,
+            'min': min_val,
+            'range': range_val,
+            'median': median,
+            'mode': ', '.join(modes) if modes else '无',
+            'sorted': sorted_vals
+        }
+    
+    def get_headers(self):
+        return self.headers if self.df is not None else []
+    
+    def get_row_count(self):
+        return len(self.df) if self.df is not None else 0

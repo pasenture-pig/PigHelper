@@ -1,12 +1,16 @@
 from flask import Flask, request, jsonify, render_template, send_file
 from flask_cors import CORS
 from chart_generators import ChartFactory, generate_chart
+from stats_backend import stats_bp
 import io
 import base64
 from PIL import Image
 
 app = Flask(__name__)
 CORS(app)
+
+# 注册统计分析蓝图
+app.register_blueprint(stats_bp)
 
 # === 网站主页面 ===
 @app.route('/')
@@ -18,7 +22,7 @@ def main_index():
 def charts_index():
     return render_template('index_graphic.html')
 
-# === 2D图表页面 ===
+# === 各图表页面 ===
 @app.route('/bar-chart')
 def bar_chart():
     return render_template('bar_chart.html')
@@ -35,10 +39,6 @@ def line_chart():
 def scatter_chart():
     return render_template('scatter_chart.html')
 
-@app.route('/heatmap-chart')
-def heatmap_chart():
-    return render_template('heatmap_chart.html')
-
 # === 3D图表页面 ===
 @app.route('/bar-3d-chart')
 def bar_3d_chart():
@@ -52,9 +52,20 @@ def pie_3d_chart():
 def line_3d_chart():
     return render_template('line_3d_chart.html')
 
+# === 热力图 ===
+@app.route('/heatmap-chart')
+def heatmap_chart():
+    return render_template('heatmap_chart.html')
+
+# === 曲面热力图 ===
 @app.route('/surface-chart')
 def surface_chart():
     return render_template('surface_chart.html')
+
+# === 数据统计分析 ===
+@app.route('/stats')
+def stats():
+    return render_template('stats.html')
 
 # === API：生成图表 ===
 @app.route('/api/chart', methods=['POST'])

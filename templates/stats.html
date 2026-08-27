@@ -1,0 +1,1501 @@
+{% extends "main_base.html" %}
+
+{% block title %}数据统计分析 - 猪咪小帮手{% endblock %}
+
+{% block nav_stats %}active{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .extract-hint-box.header-mode {
+    background: #fef3c7;
+    border-left-color: #f59e0b;
+}
+
+.extract-hint-box.header-mode .highlight-text {
+    color: #d97706;
+}
+    .stats-container {
+        background: white;
+        border-radius: 20px;
+        padding: 35px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    
+    .stats-header {
+        margin-bottom: 25px;
+    }
+    
+    .stats-header h1 {
+        color: #333;
+        font-size: 28px;
+        margin-bottom: 5px;
+    }
+    
+    .stats-header .subtitle {
+        color: #888;
+        font-size: 16px;
+    }
+    
+    .data-input-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .data-input-section .section-title {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 15px;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .data-input-section .section-title .badge {
+        background: #667eea;
+        color: white;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+    }
+    
+    .upload-area {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .file-upload-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+    }
+    
+    .file-upload-wrapper input[type="file"] {
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+    
+    .file-upload-btn {
+        padding: 8px 20px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .file-upload-btn:hover {
+        background: #5a6fd6;
+        transform: translateY(-1px);
+    }
+    
+    .file-upload-btn.green {
+        background: #10b981;
+    }
+    
+    .file-upload-btn.green:hover {
+        background: #059669;
+    }
+    
+    .file-upload-btn.orange {
+        background: #f59e0b;
+    }
+    
+    .file-upload-btn.orange:hover {
+        background: #d97706;
+    }
+    
+    .file-info {
+        font-size: 13px;
+        color: #888;
+    }
+    
+    .data-table-wrapper {
+        overflow-x: auto;
+        margin: 15px 0;
+        border-radius: 10px;
+        border: 2px solid #e9ecef;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        min-width: 300px;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 8px 12px;
+        border: 1px solid #dee2e6;
+        text-align: center;
+        min-width: 60px;
+        white-space: nowrap;
+    }
+    
+    .data-table th {
+        background: #667eea;
+        color: white;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .data-table th.row-header {
+        background: #764ba2;
+        min-width: 80px;
+        position: sticky;
+        left: 0;
+        z-index: 11;
+    }
+    
+    .data-table td.row-label {
+        background: #f0f0ff;
+        font-weight: 500;
+        color: #555;
+        min-width: 80px;
+        position: sticky;
+        left: 0;
+        z-index: 9;
+    }
+    
+    .data-table td {
+        font-family: 'Consolas', 'Courier New', monospace;
+    }
+    
+    .data-table tr:nth-child(even) {
+        background: #fafafa;
+    }
+    
+    .data-table tr:hover td {
+        background: #f0f4ff;
+    }
+    
+    .data-table .row-index {
+        color: #999;
+        font-size: 12px;
+    }
+    
+    .data-table .highlight-col {
+        background: #fff3cd !important;
+    }
+    
+    .data-table .highlight-row {
+        background: #d1ecf1 !important;
+    }
+    
+    .extract-section {
+        background: #f0f4ff;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 20px 0;
+        border: 1px solid #c7d2fe;
+    }
+    
+    .extract-section .section-title {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 15px;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .extract-options {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        align-items: end;
+    }
+    
+    .extract-options .form-group {
+        margin-bottom: 0;
+        flex: 0 1 auto;
+        min-width: 120px;
+    }
+    
+    .extract-options label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #555;
+        display: block;
+        margin-bottom: 4px;
+    }
+    
+    .extract-options label .hint {
+        font-weight: 400;
+        color: #999;
+        font-size: 11px;
+    }
+    
+    .extract-options select,
+    .extract-options input {
+        padding: 6px 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        background: white;
+        width: 100%;
+        min-width: 80px;
+    }
+    
+    .extract-options select:focus,
+    .extract-options input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .extract-options .help-text {
+        font-size: 11px;
+        color: #999;
+        margin-top: 4px;
+        min-height: 18px;
+    }
+    
+    .extract-options .form-group.hidden {
+        display: none;
+    }
+    
+    .extract-hint-box {
+        margin-top: 12px;
+        padding: 10px 15px;
+        background: #e8f0fe;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+        font-size: 13px;
+        color: #555;
+    }
+    
+    .extract-hint-box .highlight-text {
+        color: #667eea;
+        font-weight: 600;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-primary {
+        padding: 12px 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .btn-success {
+        padding: 12px 30px;
+        background: #10b981;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .btn-success:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(16, 185, 129, 0.4);
+    }
+    
+    .btn-success:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .btn-outline {
+        padding: 12px 30px;
+        background: transparent;
+        color: #666;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .btn-outline:hover {
+        background: #f0f0f0;
+        border-color: #ccc;
+    }
+    
+    .btn-danger-outline {
+        padding: 12px 30px;
+        background: transparent;
+        color: #ef4444;
+        border: 2px solid #ef4444;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .btn-danger-outline:hover {
+        background: #fee;
+    }
+    
+    .error-msg {
+        color: #ef4444;
+        padding: 10px 15px;
+        background: #fee;
+        border-radius: 8px;
+        margin-top: 10px;
+        display: none;
+        border-left: 4px solid #ef4444;
+    }
+    
+    .error-msg.show {
+        display: block;
+    }
+    
+    .success-msg {
+        color: #10b981;
+        padding: 10px 15px;
+        background: #d1fae5;
+        border-radius: 8px;
+        margin-top: 10px;
+        display: none;
+        border-left: 4px solid #10b981;
+    }
+    
+    .success-msg.show {
+        display: block;
+    }
+    
+    .result-section {
+        display: none;
+        margin-top: 20px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        border: 2px solid #10b981;
+    }
+    
+    .result-section.active {
+        display: block;
+    }
+    
+    .result-section .result-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #10b981;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .result-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+    }
+    
+    .result-item {
+        background: white;
+        padding: 12px 15px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        border: 1px solid #e9ecef;
+    }
+    
+    .result-item .result-label {
+        font-size: 11px;
+        color: #888;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .result-item .result-value {
+        font-size: 18px;
+        font-weight: 700;
+        color: #333;
+        margin-top: 4px;
+        word-break: break-all;
+    }
+    
+    .result-item .result-value.highlight {
+        color: #667eea;
+    }
+    
+    .result-item .result-value.positive {
+        color: #10b981;
+    }
+    
+    .result-item .result-value.negative {
+        color: #ef4444;
+    }
+    
+    .extracted-data {
+        margin-bottom: 15px;
+        padding: 12px 15px;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .extracted-data .label {
+        font-size: 13px;
+        color: #888;
+        font-weight: 500;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .extracted-data .label .edit-hint {
+        font-weight: 400;
+        font-size: 12px;
+        color: #999;
+    }
+    
+    .extracted-data .values {
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 14px;
+        color: #333;
+        margin-top: 5px;
+        word-break: break-all;
+        max-height: 100px;
+        overflow-y: auto;
+    }
+    
+    .extracted-data .values textarea {
+        width: 100%;
+        padding: 8px 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 14px;
+        resize: vertical;
+        min-height: 60px;
+        transition: border-color 0.3s;
+    }
+    
+    .extracted-data .values textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .no-data-hint {
+        text-align: center;
+        padding: 40px 20px;
+        color: #aaa;
+    }
+    
+    .no-data-hint .icon {
+        font-size: 48px;
+        display: block;
+        margin-bottom: 15px;
+    }
+    
+    .badge-info {
+        display: inline-block;
+        background: #e8f0fe;
+        color: #667eea;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .data-editor-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .data-editor-row .btn-sm {
+        padding: 4px 14px;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .data-editor-row .btn-sm.primary {
+        background: #667eea;
+        color: white;
+    }
+    
+    .data-editor-row .btn-sm.primary:hover {
+        background: #5a6fd6;
+    }
+    
+    .data-editor-row .btn-sm.success {
+        background: #10b981;
+        color: white;
+    }
+    
+    .data-editor-row .btn-sm.success:hover {
+        background: #059669;
+    }
+    
+    @media (max-width: 768px) {
+        .stats-container {
+            padding: 20px;
+        }
+        
+        .extract-options {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .extract-options .form-group {
+            min-width: auto;
+        }
+        
+        .result-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .upload-area {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats-container">
+    <div class="stats-header">
+        <h1>📊 数据统计分析</h1>
+        <p class="subtitle">上传 CSV/Excel 文件或粘贴数据，灵活提取数据并计算统计指标</p>
+    </div>
+    
+    <!-- 数据输入 -->
+    <div class="data-input-section">
+        <div class="section-title">
+            📁 数据输入
+            <span class="badge">必填</span>
+            <span style="font-size: 13px; color: #888; font-weight: 400; margin-left: 5px;" id="fileInfo">支持 CSV, Excel</span>
+        </div>
+        
+        <div class="upload-area">
+            <div class="file-upload-wrapper">
+                <button class="file-upload-btn">📤 上传文件</button>
+                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls">
+            </div>
+            <span style="color: #ccc;">或</span>
+            <details style="cursor: pointer; color: #667eea; font-size: 14px;">
+                <summary>📋 从Excel/CSV粘贴</summary>
+                <div style="margin-top: 10px;">
+                    <textarea id="pasteArea" rows="4" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 13px;" placeholder="粘贴表格数据，用Tab或逗号分隔列，换行分隔行&#10;例如:&#10;数学,语文,英语,物理&#10;85,92,78,88&#10;90,85,82,95"></textarea>
+                    <button class="file-upload-btn green" id="pasteBtn" style="margin-top: 8px;">导入数据</button>
+                </div>
+            </details>
+            <button class="file-upload-btn orange" id="loadSampleBtn">📊 加载示例数据</button>
+        </div>
+        
+        <div class="data-table-wrapper" id="tableWrapper">
+            <div class="no-data-hint" id="noDataHint">
+                <span class="icon">📂</span>
+                <p>暂无数据，请上传文件或粘贴数据</p>
+            </div>
+            <table class="data-table" id="dataTable" style="display: none;">
+                <thead id="tableHead"></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-top: 8px;">
+            <span style="font-size: 13px; color: #888;" id="totalRowsInfo">共 0 行</span>
+            <span style="font-size: 13px; color: #888;">💡 数据预览（前100行）</span>
+        </div>
+    </div>
+    
+    <!-- 提取设置 - 动态交互 -->
+    <div class="extract-section">
+    <div class="section-title">
+        🎯 数据提取设置
+        <span class="badge" style="background: #f59e0b;">选填</span>
+        <span class="badge-info" id="extractHintBadge">💡 选择提取方式后自动显示对应参数</span>
+    </div>
+    
+    <div class="extract-options">
+        <!-- 提取方式 -->
+        <div class="form-group" style="min-width: 150px;">
+            <label for="extractMode">提取方式</label>
+            <select id="extractMode">
+                <option value="row">按行提取</option>
+                <option value="col">按列提取</option>
+                <option value="all">全部数据</option>
+            </select>
+            <div class="help-text">选择数据的提取方向</div>
+        </div>
+        
+        <!-- 行序号（按行时显示） -->
+        <div class="form-group" id="rowIndexGroup">
+            <label for="rowIndex">行序号 <span class="hint">(从0开始)</span></label>
+            <input type="number" id="rowIndex" value="0" min="0" max="999">
+            <div class="help-text">0=第一行（可能是表头）</div>
+        </div>
+        
+        <!-- 起始列（按行时显示） -->
+        <div class="form-group" id="rowStartColGroup">
+            <label for="rowStartCol">起始列 <span class="hint">(从1开始)</span></label>
+            <input type="number" id="rowStartCol" value="1" min="1" max="999">
+            <div class="help-text">从第几列开始提取</div>
+        </div>
+        
+        <!-- 列序号（按列时显示） -->
+        <div class="form-group hidden" id="colIndexGroup">
+            <label for="colIndex">列序号 <span class="hint">(从0开始)</span></label>
+            <input type="number" id="colIndex" value="0" min="0" max="999">
+            <div class="help-text">0=第一列（可能是表头列）</div>
+        </div>
+        
+        <!-- 起始行（按列时显示） -->
+        <div class="form-group hidden" id="colStartRowGroup">
+            <label for="colStartRow">起始行 <span class="hint">(从1开始)</span></label>
+            <input type="number" id="colStartRow" value="1" min="1" max="999">
+            <div class="help-text">从第几行开始提取</div>
+        </div>
+        
+        <!-- 起始行（全部数据时显示） -->
+        <div class="form-group hidden" id="startRowGroup">
+            <label for="startRowAll">起始行 <span class="hint">(从1开始)</span></label>
+            <input type="number" id="startRowAll" value="1" min="1" max="999">
+            <div class="help-text">从第几行开始提取</div>
+        </div>
+
+        <!-- 起始列（全部数据时显示） -->
+        <div class="form-group hidden" id="startColGroup">
+            <label for="startColAll">起始列 <span class="hint">(从1开始)</span></label>
+            <input type="number" id="startColAll" value="1" min="1" max="999">
+            <div class="help-text">从第几列开始提取</div>
+        </div>
+        
+        <!-- 允许非数值数据 -->
+        <div class="form-group" style="min-width: 140px;">
+            <label for="allowNonNumeric">允许非数值数据</label>
+            <select id="allowNonNumeric">
+                <option value="false">否</option>
+                <option value="true">是</option>
+            </select>
+            <div class="help-text">开启后提取所有数据（含文本），不计算统计</div>
+        </div>
+    </div>
+    
+<!-- 动态提示框 -->
+<div class="extract-hint-box" id="extractHint">
+    <span id="hintIcon">💡</span>
+    当前将提取 <span class="highlight-text" id="hintModeText">第 0 行</span> 
+    <span id="hintExtraText"></span>
+</div>
+    
+    <!-- 操作按钮 -->
+    <div class="action-buttons">
+        <button class="btn btn-primary" id="analyzeBtn">🔍 分析数据</button>
+        <button class="btn btn-success" id="exportBtn" disabled>📥 导出结果</button>
+        <button class="btn btn-danger-outline" id="resetBtn">🔄 重置</button>
+    </div>
+    
+    <!-- 错误/成功消息 -->
+    <div class="error-msg" id="errorMsg"></div>
+    <div class="success-msg" id="successMsg"></div>
+    
+    <!-- 统计结果 -->
+    <div class="result-section" id="resultSection">
+        <div class="result-title">
+            📈 统计结果
+            <span style="font-size: 12px; font-weight: 400; color: #888; margin-left: 10px;" id="dataSourceLabel"></span>
+            <span style="font-size: 12px; font-weight: 400; color: #888; margin-left: auto;" id="resultTime"></span>
+        </div>
+        
+        <div class="extracted-data" id="extractedDataDisplay">
+            <div class="label">
+                <span>📋 提取的数据（可编辑）</span>
+                <span class="edit-hint">💡 修改后点击"重新计算"更新统计</span>
+            </div>
+            <div class="values">
+                <textarea id="extractedValues" rows="2" placeholder="提取的数据将显示在这里，你可以编辑"></textarea>
+            </div>
+            <div class="data-editor-row">
+                <button class="btn-sm primary" id="recalcBtn">🔄 重新计算</button>
+                <button class="btn-sm success" id="applyEditBtn">✅ 应用修改</button>
+                <span style="font-size: 12px; color: #999; margin-left: 5px;" id="dataCountDisplay">数据量: 0</span>
+            </div>
+        </div>
+        
+        <div class="result-grid" id="resultGrid">
+            <div class="result-item">
+                <div class="result-label">📊 数据量</div>
+                <div class="result-value highlight" id="statCount">-</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">📈 平均值</div>
+                <div class="result-value highlight" id="statMean">-</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">📉 方差</div>
+                <div class="result-value" id="statVariance">-</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">📊 标准差</div>
+                <div class="result-value" id="statStd">-</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">⬆️ 最大值</div>
+                <div class="result-value positive" id="statMax">-</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">⬇️ 最小值</div>
+                <div class="result-value negative" id="statMin">-</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">📏 极差</div>
+                <div class="result-value" id="statRange">-</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">📐 中位数</div>
+                <div class="result-value" id="statMedian">-</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">📊 总和</div>
+                <div class="result-value" id="statSum">-</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">📈 众数</div>
+                <div class="result-value" id="statMode">-</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // ============ API 调用 ============
+    const API_BASE = '/api/stats';
+
+    // ============ DOM 引用 ============
+    const fileInput = document.getElementById('fileInput');
+    const pasteArea = document.getElementById('pasteArea');
+    const pasteBtn = document.getElementById('pasteBtn');
+    const loadSampleBtn = document.getElementById('loadSampleBtn');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const recalcBtn = document.getElementById('recalcBtn');
+    const applyEditBtn = document.getElementById('applyEditBtn');
+    
+    const tableHead = document.getElementById('tableHead');
+    const tableBody = document.getElementById('tableBody');
+    const dataTable = document.getElementById('dataTable');
+    const noDataHint = document.getElementById('noDataHint');
+    const totalRowsInfo = document.getElementById('totalRowsInfo');
+    const fileInfo = document.getElementById('fileInfo');
+    
+    const extractMode = document.getElementById('extractMode');
+    const rowIndexGroup = document.getElementById('rowIndexGroup');
+    const rowStartColGroup = document.getElementById('rowStartColGroup');
+    const colIndexGroup = document.getElementById('colIndexGroup');
+    const colStartRowGroup = document.getElementById('colStartRowGroup');
+    const startRowGroup = document.getElementById('startRowGroup');
+    const startColGroup = document.getElementById('startColGroup');
+    const rowIndex = document.getElementById('rowIndex');
+    const rowStartCol = document.getElementById('rowStartCol');
+    const colIndex = document.getElementById('colIndex');
+    const colStartRow = document.getElementById('colStartRow');
+    const startRowAll = document.getElementById('startRowAll');
+    const startColAll = document.getElementById('startColAll');
+    const includeHeaders = document.getElementById('includeHeaders');
+    const extractHeader = document.getElementById('extractHeader');
+    const extractHint = document.getElementById('extractHint');
+    const hintModeText = document.getElementById('hintModeText');
+    const hintExtraText = document.getElementById('hintExtraText');
+    
+    const resultSection = document.getElementById('resultSection');
+    const dataSourceLabel = document.getElementById('dataSourceLabel');
+    const resultTime = document.getElementById('resultTime');
+    const extractedValues = document.getElementById('extractedValues');
+    const dataCountDisplay = document.getElementById('dataCountDisplay');
+    const errorMsg = document.getElementById('errorMsg');
+    const successMsg = document.getElementById('successMsg');
+
+    let currentData = null;
+    let currentPreviewInfo = null;
+    let lastExtractedValues = null;
+
+    // ============ 工具函数 ============
+    function showError(msg) {
+        errorMsg.textContent = '❌ ' + msg;
+        errorMsg.classList.add('show');
+        successMsg.classList.remove('show');
+    }
+
+    function showSuccess(msg) {
+        successMsg.textContent = msg;
+        successMsg.classList.add('show');
+        errorMsg.classList.remove('show');
+    }
+
+    function hideMessages() {
+        errorMsg.classList.remove('show');
+        successMsg.classList.remove('show');
+    }
+
+    function resetUI() {
+        resultSection.classList.remove('active');
+        exportBtn.disabled = true;
+        currentData = null;
+        lastExtractedValues = null;
+        hideMessages();
+        document.querySelectorAll('.result-value').forEach(el => el.textContent = '-');
+        extractedValues.value = '';
+        dataCountDisplay.textContent = '数据量: 0';
+        dataSourceLabel.textContent = '';
+        resultTime.textContent = '';
+        dataTable.style.display = 'none';
+        noDataHint.style.display = 'block';
+        tableHead.innerHTML = '';
+        tableBody.innerHTML = '';
+        totalRowsInfo.textContent = '共 0 行';
+        fileInfo.textContent = '支持 CSV, Excel';
+        document.getElementById('fileInput').value = '';
+        currentPreviewInfo = null;
+        updateHint();
+    }
+
+// ============ 动态提示更新 ============
+function updateHint() {
+    const mode = extractMode.value;
+    const allowNonNumeric = document.getElementById('allowNonNumeric').value === 'true';
+    const hintBox = document.getElementById('extractHint');
+    const hintIcon = document.getElementById('hintIcon');
+    
+    let modeText = '';
+    let extraText = '';
+    let isHeader = false;
+    let icon = '💡';
+    
+    if (mode === 'row') {
+        const idx = parseInt(rowIndex.value) || 0;
+        // 显示从1开始
+        const startColDisplay = parseInt(rowStartCol.value) || 1;
+        
+        if (idx === 0) {
+            isHeader = true;
+            icon = '📋';
+            modeText = '表头（列名）';
+            extraText = `提取第 0 行（表头），从第 ${startColDisplay} 列开始，自动忽略是否为数值`;
+        } else {
+            modeText = `第 ${idx} 行`;
+            const nonNumText = allowNonNumeric ? '（含非数值）' : '（仅数值）';
+            extraText = `从第 ${idx} 行，第 ${startColDisplay} 列开始提取数据 ${nonNumText}`;
+        }
+    } else if (mode === 'col') {
+        const idx = parseInt(colIndex.value) || 0;
+        const startRowDisplay = parseInt(colStartRow.value) || 1;
+        
+        if (idx === 0) {
+            isHeader = true;
+            icon = '📋';
+            modeText = '行索引';
+            extraText = `提取第 0 列（行索引），从第 ${startRowDisplay} 行开始，自动忽略是否为数值`;
+        } else {
+            modeText = `第 ${idx} 列`;
+            const nonNumText = allowNonNumeric ? '（含非数值）' : '（仅数值）';
+            extraText = `从第 ${startRowDisplay} 行，第 ${idx} 列开始提取数据 ${nonNumText}`;
+        }
+    } else {
+        const startRDisplay = parseInt(startRowAll.value) || 1;
+        const startCDisplay = parseInt(startColAll.value) || 1;
+        const nonNumText = allowNonNumeric ? '（含非数值）' : '（仅数值）';
+        modeText = `全部数据`;
+        const headerHint = startRDisplay === 1 ? '（含表头行）' : '';
+        extraText = `从第 ${startRDisplay} 行，第 ${startCDisplay} 列开始提取全部数据 ${nonNumText} ${headerHint}`;
+    }
+    
+    hintIcon.textContent = icon;
+    hintModeText.textContent = modeText;
+    hintExtraText.textContent = extraText;
+    
+    if (isHeader) {
+        hintBox.classList.add('header-mode');
+    } else {
+        hintBox.classList.remove('header-mode');
+    }
+}
+    // ============ 动态显示/隐藏输入组 ============
+    function updateExtractFields() {
+        const mode = extractMode.value;
+        
+        rowIndexGroup.classList.add('hidden');
+        rowStartColGroup.classList.add('hidden');
+        colIndexGroup.classList.add('hidden');
+        colStartRowGroup.classList.add('hidden');
+        startRowGroup.classList.add('hidden');
+        startColGroup.classList.add('hidden');
+        
+        if (mode === 'row') {
+            rowIndexGroup.classList.remove('hidden');
+            rowStartColGroup.classList.remove('hidden');
+        } else if (mode === 'col') {
+            colIndexGroup.classList.remove('hidden');
+            colStartRowGroup.classList.remove('hidden');
+        } else {
+            startRowGroup.classList.remove('hidden');
+            startColGroup.classList.remove('hidden');
+        }
+        
+        updateHint();
+    }
+
+    // ============ 从文本解析数值 ============
+    function parseValuesFromText(text) {
+        return text.split(',').map(s => parseFloat(s.trim())).filter(v => !isNaN(v));
+    }
+
+    // ============ 渲染预览 ============
+    function renderPreview(preview) {
+        const headers = preview.headers || [];
+        const data = preview.data || [];
+        const totalRows = preview.total_rows || 0;
+        const totalCols = headers.length || 0;
+        
+        currentPreviewInfo = { rows: totalRows, cols: totalCols };
+        
+        if (data.length === 0) {
+            dataTable.style.display = 'none';
+            noDataHint.style.display = 'block';
+            totalRowsInfo.textContent = '共 0 行';
+            return;
+        }
+        
+        noDataHint.style.display = 'none';
+        dataTable.style.display = 'table';
+        
+        let theadHtml = '<tr><th class="row-header">#</th>';
+        headers.forEach((h, idx) => {
+            theadHtml += `<th>${idx+1}. ${h}</th>`;
+        });
+        theadHtml += '</tr>';
+        tableHead.innerHTML = theadHtml;
+        
+        let tbodyHtml = '';
+        data.forEach((row, rowIdx) => {
+            tbodyHtml += `<tr><td class="row-label row-index">${rowIdx + 1}</td>`;
+            row.forEach(cell => {
+                const val = typeof cell === 'number' ? (Number.isInteger(cell) ? cell : cell.toFixed(2)) : (cell || '');
+                tbodyHtml += `<td>${val}</td>`;
+            });
+            tbodyHtml += '</tr>';
+        });
+        tableBody.innerHTML = tbodyHtml;
+        
+        totalRowsInfo.textContent = `共 ${totalRows} 行 × ${totalCols} 列，显示前 ${Math.min(data.length, 100)} 行`;
+        
+        const maxRow = Math.max(1, totalRows);
+        const maxCol = Math.max(1, totalCols);
+        rowIndex.max = maxRow;
+        rowStartCol.max = maxCol;
+        colIndex.max = maxCol;
+        colStartRow.max = maxRow;
+        startRowAll.max = maxRow;
+        startColAll.max = maxCol;
+        
+        fileInfo.textContent = `✅ ${totalRows} 行 × ${totalCols} 列`;
+    }
+
+    // ============ 文件上传 ============
+    async function uploadFile(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        try {
+            const response = await fetch(`${API_BASE}/upload`, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            if (result.success) {
+                renderPreview(result.preview);
+                showSuccess(`✅ 文件加载成功！${result.info.rows} 行 × ${result.info.cols} 列`);
+                resultSection.classList.remove('active');
+                exportBtn.disabled = true;
+                updateExtractFields();
+            } else {
+                showError('加载失败: ' + result.error);
+            }
+        } catch (error) {
+            showError('网络错误: ' + error.message);
+        }
+    }
+
+    // ============ 粘贴数据 ============
+    async function pasteData(text) {
+        if (!text.trim()) {
+            showError('请先粘贴数据');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`${API_BASE}/paste`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            });
+            const result = await response.json();
+            if (result.success) {
+                renderPreview(result.preview);
+                showSuccess(`✅ 数据导入成功！${result.info.rows} 行 × ${result.info.cols} 列`);
+                resultSection.classList.remove('active');
+                exportBtn.disabled = true;
+                pasteArea.value = '';
+                updateExtractFields();
+            } else {
+                showError('导入失败: ' + result.error);
+            }
+        } catch (error) {
+            showError('网络错误: ' + error.message);
+        }
+    }
+
+    // ============ 加载示例数据 ============
+    async function loadSampleData() {
+        const sampleData = `姓名,数学,语文,英语,物理,化学
+张三,85,92,78,88,90
+李四,90,85,82,95,88
+王五,76,88,92,80,85
+赵六,95,90,85,92,93
+孙七,70,75,80,85,78
+周八,88,82,90,86,92
+吴九,92,95,88,90,95
+郑十,78,85,80,92,85`;
+        
+        await pasteData(sampleData);
+    }
+
+   // ============ 分析数据 ============
+async function analyzeData() {
+    const mode = extractMode.value;
+    const allowNonNumeric = document.getElementById('allowNonNumeric').value === 'true';
+    
+    let index = 0;
+    let startRow = 0;
+    let startCol = 0;
+    
+    if (mode === 'row') {
+        index = parseInt(rowIndex.value) || 0;
+        // 起始列：用户输入从1开始，转换为0-based
+        startCol = parseInt(rowStartCol.value) - 1 || 0;
+        if (index < 0 || startCol < 0) {
+            showError('行序号和起始列必须大于等于0');
+            return;
+        }
+    } else if (mode === 'col') {
+        index = parseInt(colIndex.value) || 0;
+        // 起始行：用户输入从1开始，转换为0-based
+        startRow = parseInt(colStartRow.value) - 1 || 0;
+        if (index < 0 || startRow < 0) {
+            showError('列序号和起始行必须大于等于0');
+            return;
+        }
+    } else {
+        // 起始行：用户输入从1开始，转换为0-based
+        startRow = parseInt(startRowAll.value) - 1 || 0;
+        // 起始列：用户输入从1开始，转换为0-based
+        startCol = parseInt(startColAll.value) - 1 || 0;
+        if (startRow < 0 || startCol < 0) {
+            showError('起始行和起始列必须大于等于1');
+            return;
+        }
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/analyze`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                mode: mode,
+                index: index,
+                allow_non_numeric: allowNonNumeric,
+                start_row: startRow,
+                start_col: startCol
+            })
+        });
+        const result = await response.json();
+        if (result.success) {
+            // 检查是否包含非数值数据
+            const hasNonNumeric = result.has_non_numeric || false;
+            
+            if (hasNonNumeric) {
+                // 非数值数据模式 - 显示所有数据（字符串形式）
+                let displayText = '';
+                if (result.extracted.raw_data) {
+                    const rows = result.extracted.raw_data;
+                    if (Array.isArray(rows[0])) {
+                        displayText = rows.map(row => row.join(', ')).join('; ');
+                    } else {
+                        displayText = rows.join(', ');
+                    }
+                } else if (result.extracted.values) {
+                    displayText = result.extracted.values.join(', ');
+                }
+                
+                extractedValues.value = displayText || '无数据';
+                dataCountDisplay.textContent = `📋 非数值模式 (${result.extracted.count || 0}项)`;
+                
+                // 清空统计结果
+                document.getElementById('statCount').textContent = '-';
+                document.getElementById('statMean').textContent = '-';
+                document.getElementById('statVariance').textContent = '-';
+                document.getElementById('statStd').textContent = '-';
+                document.getElementById('statMax').textContent = '-';
+                document.getElementById('statMin').textContent = '-';
+                document.getElementById('statRange').textContent = '-';
+                document.getElementById('statMedian').textContent = '-';
+                document.getElementById('statSum').textContent = '-';
+                document.getElementById('statMode').textContent = '-';
+                
+                dataSourceLabel.textContent = `📋 ${result.extracted.source_label}`;
+                resultTime.textContent = `⏱ ${new Date().toLocaleString()}`;
+                resultSection.classList.add('active');
+                exportBtn.disabled = false;
+                currentData = { extracted: result.extracted, stats: null, isNonNumeric: true };
+                showSuccess('✅ 非数值数据提取成功！');
+                return;
+            }
+            
+            // 纯数值模式
+            lastExtractedValues = result.extracted.values;
+            
+            let displayText = '';
+            if (mode === 'all' && result.extracted.raw_data) {
+                const rows = result.extracted.raw_data;
+                displayText = rows.map(row => row.join(', ')).join('; ');
+            } else {
+                displayText = result.extracted.values.join(', ');
+            }
+            
+            extractedValues.value = displayText;
+            dataCountDisplay.textContent = `数据量: ${result.extracted.count}`;
+            displayResults(result.extracted, result.stats);
+        } else {
+            showError('分析失败: ' + result.error);
+        }
+    } catch (error) {
+        showError('网络错误: ' + error.message);
+    }
+}
+
+    // ============ 显示结果 ============
+    function displayResults(extracted, stats) {
+        dataSourceLabel.textContent = `来源: ${extracted.source_label}`;
+        resultTime.textContent = `⏱ ${new Date().toLocaleString()}`;
+        
+        document.getElementById('statCount').textContent = stats.count;
+        document.getElementById('statMean').textContent = stats.mean.toFixed(4);
+        document.getElementById('statVariance').textContent = stats.variance.toFixed(4);
+        document.getElementById('statStd').textContent = stats.std.toFixed(4);
+        document.getElementById('statMax').textContent = stats.max;
+        document.getElementById('statMin').textContent = stats.min;
+        document.getElementById('statRange').textContent = stats.range;
+        document.getElementById('statMedian').textContent = stats.median.toFixed(4);
+        document.getElementById('statSum').textContent = stats.sum.toFixed(4);
+        document.getElementById('statMode').textContent = stats.mode;
+        
+        resultSection.classList.add('active');
+        exportBtn.disabled = false;
+        currentData = { extracted, stats, isHeaderOnly: false };
+        
+        showSuccess(`✅ 分析完成！共 ${stats.count} 个数据点`);
+    }
+
+    // ============ 重新计算 ============
+    function recalculateFromEditor() {
+        const text = extractedValues.value.trim();
+        if (!text) {
+            showError('请输入数据');
+            return;
+        }
+        
+        const values = parseValuesFromText(text);
+        if (values.length === 0) {
+            showError('没有有效的数值数据，请用逗号分隔');
+            return;
+        }
+        
+        const stats = calculateStatsLocal(values);
+        if (!stats) {
+            showError('计算失败');
+            return;
+        }
+        
+        dataCountDisplay.textContent = `数据量: ${values.length}`;
+        
+        document.getElementById('statCount').textContent = stats.count;
+        document.getElementById('statMean').textContent = stats.mean.toFixed(4);
+        document.getElementById('statVariance').textContent = stats.variance.toFixed(4);
+        document.getElementById('statStd').textContent = stats.std.toFixed(4);
+        document.getElementById('statMax').textContent = stats.max;
+        document.getElementById('statMin').textContent = stats.min;
+        document.getElementById('statRange').textContent = stats.range;
+        document.getElementById('statMedian').textContent = stats.median.toFixed(4);
+        document.getElementById('statSum').textContent = stats.sum.toFixed(4);
+        document.getElementById('statMode').textContent = stats.mode;
+        
+        dataSourceLabel.textContent = '📝 手动编辑数据';
+        resultTime.textContent = `⏱ ${new Date().toLocaleString()}`;
+        
+        resultSection.classList.add('active');
+        exportBtn.disabled = false;
+        currentData = { 
+            extracted: { values: values, source_label: '手动编辑' }, 
+            stats: stats,
+            isHeaderOnly: false
+        };
+        
+        showSuccess(`✅ 重新计算完成！共 ${stats.count} 个数据点`);
+    }
+
+    // ============ 本地计算统计 ============
+    function calculateStatsLocal(values) {
+        if (!values || values.length === 0) return null;
+        
+        const n = values.length;
+        const sorted = [...values].sort((a, b) => a - b);
+        const sum = values.reduce((a, b) => a + b, 0);
+        const mean = sum / n;
+        const variance = values.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1);
+        const std = Math.sqrt(variance);
+        const max = Math.max(...values);
+        const min = Math.min(...values);
+        const range = max - min;
+        
+        let median;
+        if (n % 2 === 0) {
+            median = (sorted[n/2 - 1] + sorted[n/2]) / 2;
+        } else {
+            median = sorted[Math.floor(n/2)];
+        }
+        
+        const freq = {};
+        values.forEach(v => { freq[v] = (freq[v] || 0) + 1; });
+        let maxFreq = 0;
+        let modes = [];
+        for (const [key, count] of Object.entries(freq)) {
+            if (count > maxFreq) {
+                maxFreq = count;
+                modes = [key];
+            } else if (count === maxFreq) {
+                modes.push(key);
+            }
+        }
+        const mode = modes.join(', ');
+        
+        return {
+            count: n,
+            sum: sum,
+            mean: mean,
+            variance: variance,
+            std: std,
+            max: max,
+            min: min,
+            range: range,
+            median: median,
+            mode: mode || '无',
+            sorted: sorted
+        };
+    }
+
+    // ============ 导出结果 ============
+    function exportResult() {
+        if (!currentData) return;
+        
+        const { extracted, stats, isHeaderOnly } = currentData;
+        
+        let lines = [];
+        if (isHeaderOnly) {
+            lines = [
+                '=== 表头提取结果 ===',
+                '',
+                `数据来源: ${extracted.source_label}`,
+                '',
+                '表头信息:',
+                extracted.header_data ? extracted.header_data.join(', ') : '',
+                '',
+                '原始数据:',
+                extracted.values && extracted.values.length > 0 ? 
+                    (Array.isArray(extracted.values[0]) ? 
+                        extracted.values.map(row => row.join(', ')).join('\n') : 
+                        extracted.values.join(', ')) : 
+                    '无',
+                '',
+                '=== 生成时间 ===',
+                new Date().toLocaleString()
+            ];
+        } else {
+            lines = [
+                '=== 数据统计分析结果 ===',
+                '',
+                `提取方式: ${extracted.mode === 'row' ? '按行' : extracted.mode === 'col' ? '按列' : '全部数据'}`,
+                `数据来源: ${extracted.source_label || '手动编辑'}`,
+                '',
+                '提取的数据:',
+                extracted.values.join(', '),
+                '',
+                '=== 统计指标 ===',
+                `数据量: ${stats.count}`,
+                `总和: ${stats.sum.toFixed(4)}`,
+                `平均值: ${stats.mean.toFixed(4)}`,
+                `方差: ${stats.variance.toFixed(4)}`,
+                `标准差: ${stats.std.toFixed(4)}`,
+                `最大值: ${stats.max}`,
+                `最小值: ${stats.min}`,
+                `极差: ${stats.range}`,
+                `中位数: ${stats.median.toFixed(4)}`,
+                `众数: ${stats.mode}`,
+                '',
+                '=== 排序后数据 ===',
+                stats.sorted.join(', '),
+                '',
+                '=== 生成时间 ===',
+                new Date().toLocaleString()
+            ];
+        }
+        
+        const content = lines.join('\n');
+        const blob = new Blob(['\uFEFF' + content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = isHeaderOnly ? `表头提取_${new Date().toISOString().slice(0, 10)}.txt` : `统计结果_${new Date().toISOString().slice(0, 10)}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showSuccess('📥 结果已导出！');
+    }
+
+    // ============ 重置 ============
+    async function resetData() {
+        try {
+            await fetch(`${API_BASE}/reset`, { method: 'POST' });
+            resetUI();
+            updateExtractFields();
+            showSuccess('✅ 已重置');
+        } catch (error) {
+            showError('重置失败: ' + error.message);
+        }
+    }
+
+    // ============ 事件绑定 ============
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            uploadFile(e.target.files[0]);
+        }
+    });
+
+    pasteBtn.addEventListener('click', () => {
+        pasteData(pasteArea.value);
+    });
+
+    loadSampleBtn.addEventListener('click', loadSampleData);
+
+    analyzeBtn.addEventListener('click', analyzeData);
+
+    exportBtn.addEventListener('click', exportResult);
+
+    resetBtn.addEventListener('click', resetData);
+
+    recalcBtn.addEventListener('click', recalculateFromEditor);
+    
+    applyEditBtn.addEventListener('click', recalculateFromEditor);
+
+    extractMode.addEventListener('change', updateExtractFields);
+
+    [rowIndex, rowStartCol, colIndex, colStartRow, startRowAll, startColAll, includeHeaders, extractHeader].forEach(el => {
+        if (el) {
+            el.addEventListener('input', updateHint);
+        }
+    });
+
+    extractedValues.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.ctrlKey) {
+            recalculateFromEditor();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && (e.target.closest('.extract-options') || 
+            e.target.id === 'rowIndex' || e.target.id === 'rowStartCol' ||
+            e.target.id === 'colIndex' || e.target.id === 'colStartRow' ||
+            e.target.id === 'startRowAll' || e.target.id === 'startColAll')) {
+            analyzeBtn.click();
+        }
+    });
+
+    pasteArea.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.ctrlKey) {
+            pasteBtn.click();
+        }
+    });
+
+    // ============ 初始化 ============
+    resetUI();
+    updateExtractFields();
+    console.log('📊 数据统计分析模块已加载');
+</script>
+{% endblock %}
